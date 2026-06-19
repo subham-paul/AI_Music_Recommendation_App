@@ -1,0 +1,1764 @@
+{% extends "base.html" %}
+{% block title %}Dashboard • AI Music Motion Player{% endblock %}
+
+{% block content %}
+<!-- Dashboard — upgraded visuals, voice-search & play, playlist controls, mood sparkline -->
+<main class="db-container">
+
+  <!-- HERO / Header -->
+  <header class="db-hero">
+    <div class="db-hero-inner">
+      <div class="hero-left">
+        <h1 class="db-title">Dashboard</h1>
+        <p class="db-sub">Live controls • Mood-aware recommendations • Interactive player</p>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-actions">
+          <label class="mirror-switch" title="Mirror preview">
+            <input id="mirrorToggle" type="checkbox" aria-label="Mirror preview">
+            <span class="track"><span class="thumb"></span></span>
+            <span class="ms-label">Mirror</span>
+          </label>
+
+          <div class="platform-wrap">
+            <!-- renamed hero-area control to avoid duplicate IDs -->
+            <select id="heroPlatformSelect" aria-label="Recommendation platform">
+              <option value="youtube">YouTube</option>
+              <option value="spotify">Spotify</option>
+              <option value="ytmusic">YouTube Music</option>
+            </select>
+            <button id="heroGetRecoBtn" class="btn primary">Get Recommendations</button>
+          </div>
+        </div>
+
+        <div class="hero-meta">
+          <button id="exportHistBtn" class="btn secondary">Export CSV</button>
+          <button id="clearHistBtn" class="btn secondary">Clear History</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- decorative animated background -->
+    <div class="hero-decor" aria-hidden="true">
+      <svg class="blob" viewBox="0 0 600 300" preserveAspectRatio="none">
+        <defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+        <path fill="url(#g1)" opacity="0.08" d="M421.5,41.7C457.9,74.4,468.1,123.9,457.4,165.2C446.6,206.5,415,239.5,374.4,263.3C333.8,287,284.2,301.6,240.7,287.9C197.1,274.1,159.5,232.2,121,203.9C82.4,175.6,41.9,160,33.3,120.6C24.7,81.2,47.3,38.9,83.7,17.7C120.1,-3.5,170.2,-6.9,216.1,8.2C262,23.3,385.1,8.9,421.5,41.7Z"></path>
+      </svg>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <section class="db-grid">
+
+    <!-- LEFT: Live controls, player, search -->
+    <section class="col-left">
+
+      <!-- LIVE CONTROL CARD -->
+      <div class="card live-card">
+        <div class="card-row">
+          <div>
+            <strong class="card-title">Live Face &amp; Voice</strong>
+            <div class="muted">Toggle camera & mic — real-time mood detection.</div>
+          </div>
+          <div class="control-buttons">
+            <button id="startCamBtn" class="btn">Start Cam</button>
+            <button id="stopCamBtn" class="btn">Stop Cam</button>
+            <button id="startVoiceBtn" class="btn">Start Voice</button>
+            <button id="stopVoiceBtn" class="btn">Stop Voice</button>
+          </div>
+        </div>
+
+        <div class="live-body">
+          <div class="preview-column">
+            <div class="camera-frame">
+              <video id="camPreview" autoplay playsinline muted></video>
+              <div class="preview-overlay">
+                <span class="live-dot" aria-hidden="true"></span>
+                <div class="preview-meta">
+                  <div id="camStatus" class="small muted">Camera: off</div>
+                  <div id="micStatus" class="small muted">Mic: off</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- =============================
+                 NEW: Visualizer placed directly under the camera-frame
+                 This is the only addition to your original file.
+                 ============================== -->
+            <div class="viz-container" aria-hidden="false">
+              <canvas id="camViz" class="cam-viz-canvas" width="800" height="120"></canvas>
+              <div class="viz-overlay">
+                <div class="viz-label">Live Motion Visualizer</div>
+              </div>
+            </div>
+            <!-- ============================= END NEW ============================= -->
+
+          </div>
+
+          <aside class="status-column">
+            <!-- moved the TIP into the right-side status column as requested -->
+            <div class="hint muted">Tip: Toggle Mirror to flip the preview for selfies.</div>
+
+            <div class="stat-card">
+              <div class="stat-label">Face mood</div>
+              <div id="faceMood" class="stat-large">off</div>
+              <div class="muted small">Confidence: <span id="faceConf">—</span></div>
+              <div class="progress"><div id="faceBar" class="progress-fill" style="width:6%"></div></div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">Voice mood</div>
+              <div id="voiceMood" class="stat-large">stopped</div>
+              <div class="muted small">Level: <span id="voiceLevel">—</span></div>
+              <div class="progress"><div id="voiceBar" class="progress-fill" style="width:6%"></div></div>
+            </div>
+
+            <div class="stat-card center">
+              <div class="stat-label">Combined</div>
+              <div class="combined-pill" id="liveMood">neutral</div>
+            </div>
+          </aside>
+        </div>
+        
+        <div class="card-row">
+          <div class="muted small">Platform for recommendations</div>
+          <div class="search-controls">
+            <!-- Keep the main platformSelect here (single authoritative control used by JS) -->
+            <select id="platformSelect" aria-label="Platform select" class="inline-select">
+              <option value="youtube">YouTube</option>
+              <option value="spotify">Spotify</option>
+              <option value="ytmusic">YouTube Music</option>
+            </select>
+            <button id="getRecoBtn" class="btn">Get Recommendations</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PLAYER CARD -->
+      <div class="card player-card">
+        <div class="card-row">
+          <strong class="card-title">Player &amp; Playlist</strong>
+          <div class="muted">Embeds &amp; fallbacks</div>
+        </div>
+
+        <div id="playerArea" class="player-area">
+          <div class="player-empty">
+            <svg width="64" height="64" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+            <div class="muted">No track playing</div>
+          </div>
+        </div>
+
+        <div class="player-controls">
+          <div class="left-controls">
+            <button id="shuffleBtn" class="icon-btn" title="Shuffle">🔀</button>
+            <button id="repeatBtn" class="icon-btn" title="Repeat">🔁</button>
+            <button id="savePlaylistBtn" class="btn small">Save Playlist</button>
+          </div>
+          <div class="right-controls">
+            <button id="prevBtn" class="icon-btn" title="Previous">⏮</button>
+            <button id="playBtn" class="btn primary">Play</button>
+            <button id="nextBtn" class="icon-btn" title="Next">⏭</button>
+          </div>
+        </div>
+
+        <div class="upnext">
+          <strong class="sub">Up next</strong>
+          <div id="playlist" class="playlist">
+            <div class="reco-item skel">
+              <div class="thumb"></div>
+              <div class="meta">
+                <div class="line short"></div>
+                <div class="line mid"></div>
+              </div>
+              <div class="actions"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH CARD with VOICE MODE -->
+      <div class="card search-card">
+        <div class="card-row">
+          <strong class="card-title">Search &amp; Play</strong>
+          <div class="muted">Find tracks by typing or voice</div>
+        </div>
+
+        <div class="search-row">
+          <input id="searchQuery" placeholder="Search songs, artists, playlists..." class="search-input" aria-label="Search query" />
+          <select id="searchPlatform" class="inline-select" aria-label="Search platform">
+            <option value="youtube">YouTube</option>
+            <option value="ytmusic">YouTube Music</option>
+            <option value="spotify">Spotify</option>
+          </select>
+
+          <div class="voice-wrap" role="region" aria-label="Voice search">
+            <button id="voiceSearchToggle" class="btn" title="Toggle voice mode">Voice Mode</button>
+            <button id="listenBtn" class="btn mic" title="Start/Stop listening">🎤</button>
+            <div id="listenStatus" class="listen-status muted">Click 🎤 to speak</div>
+            <div id="transcript" class="transcript" aria-live="polite"></div>
+          </div>
+
+          <button id="searchBtn" class="btn">Search</button>
+        </div>
+
+        <div id="searchResults" class="search-results"></div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT: Recommendations + Mood History + Waveform + Project Art + Extra cards -->
+    <aside class="col-right">
+
+      <!-- RECOMMENDATIONS -->
+      <div class="card">
+        <div class="card-row">
+          <strong class="card-title">Recommendations</strong>
+          <div class="muted">Based on live mood</div>
+        </div>
+
+        <div id="recoList" class="reco-list">
+          <div class="muted">Click 'Get Recommendations' to fetch suggestions.</div>
+        </div>
+      </div>
+
+      <!-- MOOD HISTORY -->
+      <div class="card">
+        <div class="card-row">
+          <strong class="card-title">Mood History</strong>
+          <div id="insCount" class="muted">0</div>
+        </div>
+
+        <div id="moodHistory" class="history">
+          <div class="muted">No history yet — mood events will appear here.</div>
+        </div>
+
+        <div class="quick-insights">
+          <div class="ins-row">Current: <strong id="insCurrent">neutral</strong></div>
+          <div class="ins-row">Detected face: <strong id="insFace">off</strong></div>
+          <div class="ins-row">Detected voice: <strong id="insVoice">stopped</strong></div>
+        </div>
+
+        <div class="sparkline-wrap">
+          <canvas id="moodSpark" width="280" height="48" aria-hidden="true"></canvas>
+        </div>
+      </div>
+
+      <!-- TRENDING PLAYLISTS (new content to fill right column) -->
+      <div class="card">
+        <div class="card-row">
+          <strong class="card-title">Trending Playlists</strong>
+          <div class="muted small">Curated — updated hourly</div>
+        </div>
+        <div class="playlist trending-list">
+          <div class="reco-item">
+            <div class="thumb" style="background-image:linear-gradient(135deg, rgba(139,92,246,0.18), rgba(110,231,183,0.06));"></div>
+            <div class="meta">
+              <div style="font-weight:800;">Chill Vibes • Evening</div>
+              <div class="muted small">12 tracks • Mood: neutral → happy</div>
+            </div>
+            <div class="actions"><button class="btn small" data-url="">Open</button></div>
+          </div>
+
+          <div class="reco-item">
+            <div class="thumb" style="background-image:linear-gradient(135deg, rgba(110,231,183,0.08), rgba(139,92,246,0.12));"></div>
+            <div class="meta">
+              <div style="font-weight:800;">Energetic Boost</div>
+              <div class="muted small">20 tracks • Mood: excited</div>
+            </div>
+            <div class="actions"><button class="btn small" data-url="#">Open</button></div>
+          </div>
+
+          <div class="reco-item">
+            <div class="thumb" style="background-image:linear-gradient(135deg, rgba(80,80,120,0.08), rgba(110,231,183,0.06));"></div>
+            <div class="meta">
+              <div style="font-weight:800;">Focus & Coding</div>
+              <div class="muted small">15 tracks • Mood: focused</div>
+            </div>
+            <div class="actions"><button class="btn small" data-url="#">Open</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECT ART -->
+      <div class="card project-card">
+        <h4 style="margin:0 0 8px 0;">Project Artwork</h4>
+        <img src="/static/images/project_artwork.jpg" alt="project-art" class="project-art" />
+        <div class="muted small" style="margin-top:8px">Local preview image (container asset).</div>
+      </div>
+
+      <!-- HELPFUL TIPS (small card) -->
+      <div class="card">
+        <div class="card-row">
+          <strong class="card-title">Tips</strong>
+          <div class="muted small">Quick</div>
+        </div>
+        <ul style="margin:0; padding-left:18px; color:var(--muted);">
+          <li>Toggle Mirror for correct selfie layout.</li>
+          <li>Grant mic/cam permissions for live visualizers.</li>
+        </ul>
+      </div>
+
+    </aside>
+  </section>
+</main>
+
+<!-- Scoped styles -->
+<style>
+  :root {
+    --accent: #6ee7b7;
+    --accent-2: #8b5cf6;
+    --glass-border: rgba(255,255,255,0.03);
+    --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+    --muted: #9fb0c4;
+  }
+
+  /* layout basics */
+  .db-container { padding:18px 20px 80px; max-width:1200px; margin:0 auto; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:var(--text); }
+  .db-hero { position:relative; padding:20px; margin-bottom:18px; border-radius:12px; background:var(--card-bg); border:1px solid var(--glass-border); overflow:hidden; box-shadow:0 12px 36px rgba(2,6,23,0.35); }
+  .db-hero-inner { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .db-title { margin:0; font-size:1.5rem; font-weight:900; }
+  .db-sub { margin:6px 0 0 0; color:var(--muted); }
+
+  .hero-decor { position:absolute; inset:0; pointer-events:none; z-index:0; opacity:0.9; filter:blur(28px) saturate(110%); display:block; }
+  .hero-decor .blob { width:120%; height:120%; transform:translate(-6%, -8%); max-width:2600px; }
+
+  .hero-right { display:flex; flex-direction:column; gap:10px; align-items:flex-end; z-index:2; }
+  .hero-actions { display:flex; gap:12px; align-items:center; }
+  .hero-meta { display:flex; gap:8px; align-items:center; }
+
+  /* GRID */
+  .db-grid { display:grid; grid-template-columns: 1fr 360px; gap:20px; align-items:start; margin-top:12px; }
+  .col-left { min-width:0; }
+  .col-right { width:360px; }
+
+  /* card */
+  .card { background:var(--card-bg); padding:14px; border-radius:12px; border:1px solid var(--glass-border); box-shadow:0 10px 30px rgba(2,6,23,0.35); margin-bottom:14px; }
+  .card-row { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px; }
+  .card-title { font-size:1.02rem; font-weight:800; }
+
+  .muted { color:var(--muted); }
+  .small { font-size:0.92rem; }
+  .sub { font-weight:700; color:var(--muted); }
+
+  /* Live card layout */
+  .live-body { display:flex; gap:14px; align-items:flex-start; flex-wrap:nowrap; }
+  .preview-column { flex: 0 0 420px; max-width:420px; }
+  .status-column { flex: 1 1 320px; min-width:260px; display:flex; flex-direction:column; gap:12px; }
+
+  /* Camera frame: ensure overflow hidden + relative positioning */
+  .camera-frame { position:relative; height:210px; border-radius:12px; overflow:hidden; border:1px solid var(--glass-border); background:#000; display:flex; align-items:center; justify-content:center; }
+  /* Video: absolute and cover the frame fully to avoid blank bars */
+  #camPreview { position:absolute; left:0; top:0; width:100%; height:100%; min-width:100%; min-height:100%; object-fit:cover; object-position:center center; display:block; }
+
+  .preview-overlay { position:absolute; left:12px; top:12px; display:flex; gap:12px; align-items:center; z-index:3; color:var(--muted); font-weight:800; }
+  .live-dot { width:10px; height:10px; border-radius:50%; background:#ff6b6b; box-shadow:0 0 14px rgba(255,107,107,0.18); animation:livePulse 1.4s infinite; }
+  @keyframes livePulse { 0%{ transform:scale(1); opacity:1 } 50%{ transform:scale(1.6); opacity:.45 } 100%{ transform:scale(1); opacity:1 } }
+
+  .hint { margin-bottom:6px; color:var(--muted); font-size:0.92rem; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.01); }
+
+  .control-buttons { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn { padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); cursor:pointer; font-weight:800; color:var(--text); transition:transform .18s; }
+  .btn:hover { transform:translateY(-3px); }
+  .btn.primary { background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#071225; border:none; box-shadow:0 10px 30px rgba(107,95,168,0.08); }
+  .btn.secondary { background:transparent; border:1px solid rgba(255,255,255,0.02); }
+
+  .inline-select { padding:8px 10px; border-radius:8px; border:1px solid var(--glass-border); background:transparent; color:var(--text); }
+  .platform-wrap { display:flex; gap:8px; align-items:center; }
+
+  .stat-card { padding:12px; border-radius:10px; background:rgba(255,255,255,0.01); text-align:center; }
+  .stat-label { color:var(--muted); font-size:0.9rem; }
+  .stat-large { font-weight:900; font-size:1.2rem; margin-top:8px; text-transform:capitalize; }
+  .combined-pill { display:inline-block; padding:8px 12px; border-radius:999px; font-weight:900; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#071225; margin-top:8px; text-transform:capitalize; }
+
+  .progress { margin-top:10px; height:8px; background:rgba(255,255,255,0.01); border-radius:8px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:6%; transition:width .5s cubic-bezier(.2,.9,.2,1); }
+
+  /* player */
+  .player-area { min-height:160px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:rgba(0,0,0,0.12); margin-bottom:12px; }
+  .player-empty { display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--muted); }
+  .player-controls { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-top:8px; }
+  .icon-btn { padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); background:transparent; cursor:pointer; }
+
+  .upnext { margin-top:12px; }
+  .playlist { display:flex; flex-direction:column; gap:10px; }
+
+  .reco-item { display:flex; gap:12px; align-items:center; padding:10px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid rgba(255,255,255,0.02); justify-content:space-between; }
+  .thumb { width:64px; height:64px; border-radius:8px; background:rgba(255,255,255,0.02); flex-shrink:0; background-size:cover; background-position:center; }
+  .meta { flex:1; min-width:0; }
+  .line { height:12px; border-radius:6px; background:rgba(255,255,255,0.02); margin-bottom:8px; }
+  .line.short { width:52%; } .line.mid { width:36%; }
+  .skel { animation:skel 1.6s linear infinite; background-size:200% 100%; }
+
+  @keyframes skel { 0%{ background-position:200% 0 } 100%{ background-position:-200% 0 } }
+
+  /* search card */
+  .search-row { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+  .search-input { flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--glass-border); background:transparent; color:var(--text); min-width:160px; }
+  .voice-wrap { display:flex; flex-direction:column; gap:6px; align-items:flex-end; min-width:160px; }
+  .mic { padding:8px 10px; }
+  .listen-status { font-size:0.86rem; color:var(--muted); }
+  .transcript { min-height:20px; font-style:italic; color:var(--muted); font-size:0.92rem; }
+
+  /* right column */
+  .reco-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .history { max-height:200px; overflow:auto; margin-top:10px; padding:8px; border-radius:8px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02); }
+  .insights { margin-top:10px; }
+  .ins-row { margin-top:6px; color:var(--muted); }
+  .ins-row strong { margin-left:6px; font-weight:800; text-transform:capitalize; }
+
+  .wave-canvas { display:block; width:100%; height:88px; border-radius:8px; background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent); margin-top:8px; }
+
+  .project-art { width:100%; height:140px; object-fit:cover; border-radius:8px; margin-top:8px; box-shadow:0 18px 40px rgba(0,0,0,0.35); }
+
+  /* small utils */
+  .muted.small { font-size:0.88rem; color:var(--muted); }
+
+  /* mirror switch visuals */
+  .mirror-switch { display:flex; align-items:center; gap:8px; }
+  .mirror-switch .track { width:44px; height:24px; border-radius:999px; background:rgba(255,255,255,0.04); display:inline-block; position:relative; }
+  .mirror-switch .thumb { position:absolute; left:4px; top:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 8px 20px rgba(0,0,0,0.25); transition:transform .18s; }
+  .mirror-switch input:checked + .track { background:linear-gradient(90deg,var(--accent),var(--accent-2)); }
+  .mirror-switch input:checked + .track .thumb { transform:translateX(20px); }
+
+  /* ============================
+     NEW: Styles for the visualizer
+     (placed under the camera)
+     ============================ */
+  .viz-container { margin-top:12px; width:100%; height:120px; border-radius:10px; overflow:hidden; position:relative; border:1px solid rgba(255,255,255,0.02); background:linear-gradient(180deg, rgba(14,12,24,0.6), rgba(8,6,20,0.35)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.02); }
+  .cam-viz-canvas { width:100%; height:100%; display:block; }
+  .viz-overlay { position:absolute; left:12px; top:8px; z-index:3; pointer-events:none; }
+  .viz-label { background:linear-gradient(90deg, rgba(255,255,255,0.04), transparent); padding:6px 10px; border-radius:999px; font-weight:800; font-size:0.8rem; color:var(--muted); }
+
+  /* trending list tweaks */
+  .trending-list .reco-item .thumb { width:56px; height:56px; border-radius:8px; }
+  .trending-list .reco-item .actions { display:flex; gap:6px; align-items:center; }
+
+  /* responsive tweaks for the viz */
+  @media (max-width:1080px) {
+    .viz-container { height:110px; }
+  }
+  @media (max-width:640px) {
+    .viz-container { height:96px; }
+  }
+  /* ============================
+     END NEW STYLES
+     ============================ */
+
+  /* responsive */
+  @media (max-width:1080px) {
+    .db-grid { grid-template-columns: 1fr; }
+    .col-right { width:auto; }
+    .live-body { flex-direction:column; gap:12px; }
+    .preview-column { width:100%; max-width:100%; flex-basis:100%; }
+    .status-column { width:100%; display:flex; flex-direction:row; gap:8px; justify-content:space-between; }
+    .camera-frame { height:200px; }
+    .hero-right { align-items:flex-start; width:100%; }
+    .hero-actions { width:100%; justify-content:flex-start; flex-wrap:wrap; gap:10px; }
+    .hero-meta { width:100%; justify-content:flex-start; gap:10px; }
+    .db-hero-inner { align-items:flex-start; }
+    .search-row { gap:10px; }
+  }
+
+  /* extra small screens */
+  @media (max-width:640px) {
+    .db-title { font-size:1.25rem; }
+    .db-hero { padding:14px; }
+    .platform-wrap select { min-width:140px; }
+    .player-area { min-height:120px; }
+    .camera-frame { height:180px; }
+  }
+
+
+  
+</style>
+
+<!-- Page scripts (voice-search + UI wiring + mood sparkline + small features)
+     This script is careful to reuse functions already present in your global JS (doSearchForPlatform, playUrl, initVoiceCapture, etc.)
+     NOTE: The visualizer below is self-contained and only uses global mic/analyser if available.
+-->
+<script>
+(function(){
+
+  // Helper
+  const $ = id => document.getElementById(id);
+
+  // ---------------------------
+  // Small fix: map hero controls (renamed) to main controls so user can click either place
+  // This avoids duplicate ids while preserving UX: heroGetRecoBtn -> triggers getRecoBtn
+  // and heroPlatformSelect change will set platformSelect.
+  // ---------------------------
+  document.addEventListener('DOMContentLoaded', () => {
+    const heroBtn = $('heroGetRecoBtn');
+    const mainBtn = $('getRecoBtn');
+    if (heroBtn && mainBtn) {
+      heroBtn.addEventListener('click', (e) => {
+        // forward click to main button (keeps existing handlers intact)
+        mainBtn.click();
+      });
+    }
+    const heroSelect = $('heroPlatformSelect');
+    const mainSelect = $('platformSelect');
+    if (heroSelect && mainSelect) {
+      // sync initial value
+      mainSelect.value = heroSelect.value;
+      heroSelect.addEventListener('change', () => {
+        mainSelect.value = heroSelect.value;
+        // optionally, trigger a change event for other listeners
+        try { mainSelect.dispatchEvent(new Event('change', { bubbles: true })); } catch(e){}
+      });
+      // keep heroSelect updated when platformSelect changes elsewhere
+      mainSelect.addEventListener('change', () => {
+        heroSelect.value = mainSelect.value;
+      });
+    }
+
+    // Mirror toggle: apply transform on load if checked (preserve state)
+    const mirror = $('mirrorToggle');
+    if (mirror) {
+      if (mirror.checked) {
+        window.PREVIEW_MIRRORED = true;
+        const v = $('camPreview');
+        if (v) v.style.transform = 'scaleX(-1)';
+      }
+    }
+
+    // wire Export CSV and Clear History buttons
+    const exportBtn = $('exportHistBtn');
+    const clearBtn = $('clearHistBtn');
+    if (exportBtn) exportBtn.addEventListener('click', handleExportHistory);
+    if (clearBtn) clearBtn.addEventListener('click', handleClearHistory);
+
+    // small camera adjust for initial render (keeps camera proportional)
+    adjustCameraHeight();
+    window.addEventListener('resize', adjustCameraHeight);
+
+    // initialize visualizer after layout
+    initCamVisualizer();
+
+    // wire additional quick action buttons
+    const refreshBtn = document.getElementById('refreshReco');
+    if (refreshBtn) refreshBtn.addEventListener('click', ()=> { $('#getRecoBtn')?.click(); });
+
+    const saveSnap = document.getElementById('saveSnapshot');
+    if (saveSnap) saveSnap.addEventListener('click', ()=> {
+      // lightweight snapshot: save visible state to a file
+      const snapshot = {
+        time: new Date().toISOString(),
+        mood: document.getElementById('liveMood')?.innerText || 'neutral',
+        platform: document.getElementById('platformSelect')?.value || 'youtube'
+      };
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type:'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'snapshot.json'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    const settingsBtn = document.getElementById('openSettings');
+    if (settingsBtn) settingsBtn.addEventListener('click', ()=> { alert('Settings panel not implemented in this build.'); });
+
+    // last sync timestamp
+    const ls = document.getElementById('lastSync');
+    if (ls) ls.innerText = new Date().toLocaleTimeString();
+  });
+
+  // ---------------------------
+  // Export mood history (CSV)
+  // Tries server API first, falls back to DOM parsing.
+  // ---------------------------
+  async function handleExportHistory(){
+    const btn = $('exportHistBtn');
+    if (btn) { btn.disabled = true; btn.innerText = 'Exporting...'; }
+    try {
+      // try server API
+      const res = await fetch('/api/mood/history');
+      if (res.ok) {
+        const data = await res.json();
+        downloadCSVFromArray(data, 'mood_history.csv');
+        return;
+      }
+    } catch(e){
+      // ignore, fallback to DOM
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerText = 'Export CSV'; }
+    }
+
+    // fallback: read DOM
+    try {
+      const domItems = Array.from(document.querySelectorAll('#moodHistory .history-item'));
+      if (!domItems.length) {
+        alert('No mood history available to export.');
+        return;
+      }
+      const arr = domItems.map(el => {
+        return {
+          time: el.dataset.time || '',
+          mood: el.dataset.mood || (el.querySelector('.mood')?.innerText || ''),
+          note: el.querySelector('.note')?.innerText || ''
+        };
+      });
+      downloadCSVFromArray(arr, 'mood_history_fallback.csv');
+    } catch(e){
+      alert('Export failed.');
+    }
+  }
+
+  function downloadCSVFromArray(arr, filename){
+    if (!Array.isArray(arr) || arr.length === 0) {
+      alert('No data to export.');
+      return;
+    }
+    const keys = Object.keys(arr[0]);
+    const lines = [keys.join(',')];
+    for (const row of arr) {
+      const vals = keys.map(k => {
+        const v = row[k] === null || row[k] === undefined ? '' : String(row[k]);
+        // escape quotes
+        return '"' + v.replace(/"/g, '""') + '"';
+      });
+      lines.push(vals.join(','));
+    }
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ---------------------------
+  // Clear mood history: call server if available, otherwise just clear UI.
+  // ---------------------------
+  async function handleClearHistory(){
+    const ok = confirm('Clear all mood history? This cannot be undone.');
+    if (!ok) return;
+    const btn = $('clearHistBtn');
+    if (btn) { btn.disabled = true; btn.innerText = 'Clearing...'; }
+    try {
+      const res = await fetch('/api/mood/clear', { method: 'POST' });
+      if (res.ok) {
+        clearHistoryUI();
+        return;
+      }
+    } catch(e) {
+      // fallback to clearing UI anyway
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerText = 'Clear History'; }
+    }
+    // fallback: clear UI
+    clearHistoryUI();
+  }
+
+  function clearHistoryUI(){
+    const historyEl = document.getElementById('moodHistory');
+    if (historyEl) {
+      historyEl.innerHTML = '<div class="muted">No history yet — mood events will appear here.</div>';
+    }
+    const insCount = document.getElementById('insCount');
+    if (insCount) insCount.innerText = '0';
+    const insCurrent = document.getElementById('insCurrent');
+    if (insCurrent) insCurrent.innerText = 'neutral';
+    // also clear local storage used by live updater
+    try { localStorage.removeItem('mood_history_local'); } catch(e){}
+    alert('Mood history cleared.');
+  }
+
+  // ---------------------------
+  // Voice Search: uses existing recognition in app.js if present,
+  // otherwise falls back to local Web Speech API implementation.
+  // ---------------------------
+  let localRecognition = null;
+  let voiceActive = false;
+
+  function initLocalRecognition(){
+    if (localRecognition) return localRecognition;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const r = new SR();
+    r.lang = 'en-US';
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    r.onstart = () => { voiceActive = true; updateListenUI(); };
+    r.onend = () => { voiceActive = false; updateListenUI(); };
+    r.onerror = (e) => { console.warn('Speech recognition error', e); $('#listenStatus').innerText = 'Recognition error'; };
+    r.onresult = (ev) => {
+      if (!ev.results || !ev.results[0]) return;
+      const text = ev.results[0][0].transcript.trim();
+      $('#transcript').innerText = '"' + text + '"';
+      $('#searchQuery').value = text;
+      // perform search for currently selected platform
+      if (typeof doSearchForPlatform === 'function') doSearchForPlatform($('#searchPlatform').value || 'youtube');
+      else triggerFallbackSearch(text);
+    };
+    localRecognition = r;
+    return r;
+  }
+
+  function updateListenUI(){
+    if (!$('#listenStatus')) return;
+    $('#listenStatus').innerText = voiceActive ? 'Listening...' : 'Click 🎤 to speak';
+    if ($('#listenBtn')) $('#listenBtn').classList.toggle('listening', voiceActive);
+  }
+
+  // Toggle listening: prefer global recognition from app.js (variable `recognition`) otherwise init local
+  async function toggleListening(){
+    if (window.recognition) {
+      try {
+        if (window.listening) { window.recognition.stop(); } else { window.recognition.start(); }
+        return;
+      } catch(e) { console.warn('global recognition toggle failed', e); /* fall through */ }
+    }
+
+    const r = initLocalRecognition();
+    if (!r) {
+      $('#listenStatus').innerText = 'Speech recognition not supported';
+      return;
+    }
+    try {
+      if (voiceActive) r.stop();
+      else r.start();
+    } catch(e) {
+      console.warn('recognition start error', e);
+    }
+  }
+
+  // Hook listenBtn
+  const listenBtn = $('listenBtn');
+  if (listenBtn) {
+    listenBtn.addEventListener('click', toggleListening);
+  }
+
+  // Voice Mode toggle (shows/hides transcript UI)
+  const voiceToggle = $('voiceSearchToggle');
+  if (voiceToggle) {
+    voiceToggle.addEventListener('click', () => {
+      const area = voiceToggle.nextElementSibling; // the mic button group
+      if (area) area.classList.toggle('visible');
+      if (area && area.classList.contains('visible')) {
+        setTimeout(()=> { if (listenBtn) listenBtn.focus(); }, 80);
+      }
+    });
+  }
+
+  // Fallback search helper (if doSearchForPlatform missing)
+  function triggerFallbackSearch(q){
+    if (!q) return;
+    fetch('/api/search_youtube', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ q }) })
+      .then(r => r.json()).then(data => {
+        renderSearchResults(data.results || []);
+      }).catch(e => { $('#searchResults').innerHTML = '<div class="muted">Search failed</div>'; });
+  }
+
+  // ---------------------------
+  // Player helper: load a URL into the playerArea and autoplay where supported
+  // - For YouTube URLs we create an embed iframe with autoplay=1
+  // - For direct audio files we create an <audio> element with controls + autoplay
+  // - For other URLs we create an iframe (best-effort); fallback opens in new tab
+  // ---------------------------
+  function playInPlayer(url, title) {
+    if (!url) return alert('No URL to play');
+    const player = document.getElementById('playerArea');
+    if (!player) return window.open(url, '_blank');
+
+    // normalize
+    try { url = String(url).trim(); } catch(e){}
+
+    // YouTube detection (watch?v= or youtu.be)
+    const ytMatch = url.match(/(?:v=|\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+    if (ytMatch && ytMatch[1]) {
+      const id = ytMatch[1];
+      const embed = document.createElement('iframe');
+      embed.id = 'playerFrame';
+      embed.width = '100%';
+      embed.height = '260';
+      embed.frameBorder = '0';
+      embed.allow = 'autoplay; encrypted-media; fullscreen';
+      embed.src = `https://www.youtube.com/embed/${id}?rel=0&autoplay=1&playsinline=1`;
+      embed.style.borderRadius = '8px';
+      player.innerHTML = '';
+      player.appendChild(embed);
+      return;
+    }
+
+    // direct audio (mp3/ogg/wav)
+    if (/\.(mp3|ogg|wav|m4a)(\?.*)?$/i.test(url)) {
+      const audio = document.createElement('audio');
+      audio.id = 'playerMedia';
+      audio.controls = true;
+      audio.autoplay = true;
+      audio.src = url;
+      audio.style.width = '100%';
+      player.innerHTML = '';
+      player.appendChild(audio);
+      return;
+    }
+
+    // If Spotify track/embed (best-effort): if link contains open.spotify.com/track, try spotify embed
+    const spMatch = url.match(/open\.spotify\.com\/track\/([A-Za-z0-9]+)/);
+    if (spMatch && spMatch[1]) {
+      const id = spMatch[1];
+      const embed = document.createElement('iframe');
+      embed.id = 'playerFrame';
+      embed.src = `https://open.spotify.com/embed/track/${id}`;
+      embed.width = '100%';
+      embed.height = '80';
+      embed.frameBorder = '0';
+      embed.allow = 'encrypted-media';
+      player.innerHTML = '';
+      player.appendChild(embed);
+      return;
+    }
+
+    // generic fallback: create iframe to attempt to show/play the resource
+    try {
+      const embed = document.createElement('iframe');
+      embed.id = 'playerFrame';
+      embed.width = '100%';
+      embed.height = '260';
+      embed.frameBorder = '0';
+      embed.allow = 'autoplay; encrypted-media; fullscreen';
+      embed.src = url;
+      embed.style.borderRadius = '8px';
+      player.innerHTML = '';
+      player.appendChild(embed);
+      return;
+    } catch (e) {
+      // final fallback open in new tab
+      window.open(url, '_blank');
+    }
+  }
+
+  // ---------------------------
+  // Safe helper to create a reco-item element (no inline onclicks)
+  // Now includes a Play button which loads the item into the player box.
+  // ---------------------------
+  function makeRecoItem({ title='', channel='', thumb='', url='' }){
+    const el = document.createElement('div');
+    el.className = 'reco-item';
+
+    const thumbDiv = document.createElement('div');
+    thumbDiv.className = 'thumb';
+    if (thumb) {
+      // escape simple single quotes
+      thumbDiv.style.backgroundImage = `url('${String(thumb).replace(/'/g,"\\'")}')`;
+    }
+    el.appendChild(thumbDiv);
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const t = document.createElement('div');
+    t.style.fontWeight = '800';
+    t.textContent = title || '';
+    const c = document.createElement('div');
+    c.className = 'muted small';
+    c.textContent = channel || '';
+    meta.appendChild(t);
+    meta.appendChild(c);
+    el.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    // Play button: loads into playerArea
+    const playBtn = document.createElement('button');
+    playBtn.className = 'btn small';
+    playBtn.type = 'button';
+    playBtn.textContent = 'Play';
+    playBtn.addEventListener('click', (ev) => {
+      if (!url) { alert('No URL available to play'); return; }
+      playInPlayer(url, title);
+    });
+    actions.appendChild(playBtn);
+
+    // Open button: opens in new tab
+    const openBtn = document.createElement('button');
+    openBtn.className = 'btn small';
+    openBtn.type = 'button';
+    openBtn.textContent = 'Open';
+    openBtn.addEventListener('click', (ev)=> {
+      if (!url) { alert('No URL available'); return; }
+      window.open(url, '_blank');
+    });
+    actions.appendChild(openBtn);
+
+    el.appendChild(actions);
+
+    try { el.dataset.title = title; el.dataset.url = url; } catch(e){}
+    return el;
+  }
+
+  // render search results helper used by fallback (now uses makeRecoItem)
+  function renderSearchResults(results){
+    const container = document.getElementById('searchResults');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!Array.isArray(results) || !results.length) {
+      container.innerHTML = '<div class="muted">No results</div>';
+      return;
+    }
+    for (const r of results) {
+      // support multiple shapes: { id, url, title, channel, thumbnail }
+      const title = r.title || r.snippet?.title || 'Untitled';
+      const channel = r.channel || r.snippet?.channelTitle || '';
+      const thumb = r.thumbnail || r.snippet?.thumbnails?.default?.url || '';
+      let videoUrl = r.url || '';
+      if (!videoUrl && r.id) {
+        if (typeof r.id === 'string') videoUrl = 'https://www.youtube.com/watch?v=' + r.id;
+        else if (r.id.videoId) videoUrl = 'https://www.youtube.com/watch?v=' + r.id.videoId;
+      }
+      const item = makeRecoItem({ title: escapeHtml(title), channel: escapeHtml(channel), thumb, url: videoUrl });
+      container.appendChild(item);
+    }
+  }
+
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  // ---------------------------
+  // Small playlist features (shuffle, repeat, save)
+  // ---------------------------
+  const shuffleBtn = $('shuffleBtn'), repeatBtn = $('repeatBtn'), savePlaylistBtn = $('savePlaylistBtn');
+  let shuffleOn = false, repeatOn = false;
+
+  if (shuffleBtn) shuffleBtn.addEventListener('click', ()=> {
+    shuffleOn = !shuffleOn;
+    shuffleBtn.classList.toggle('active', shuffleOn);
+    shuffleBtn.title = shuffleOn ? 'Shuffle: On' : 'Shuffle: Off';
+  });
+  if (repeatBtn) repeatBtn.addEventListener('click', ()=> {
+    repeatOn = !repeatOn;
+    repeatBtn.classList.toggle('active', repeatOn);
+    repeatBtn.title = repeatOn ? 'Repeat: On' : 'Repeat: Off';
+  });
+  if (savePlaylistBtn) savePlaylistBtn.addEventListener('click', ()=> {
+    try {
+      const items = Array.from(document.querySelectorAll('#playlist .reco-item')).map(el => {
+        return { title: el.dataset.title || el.querySelector('.meta .title')?.innerText || '', url: el.dataset.url || el.querySelector('a')?.href || '' };
+      });
+      const blob = new Blob([JSON.stringify(items, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'playlist.json'; a.click(); URL.revokeObjectURL(url);
+    } catch(e){ alert('Save failed'); }
+  });
+
+  // next/prev/play hooks (will call playUrl or open fallback)
+  if ($('playBtn')) $('playBtn').addEventListener('click', ()=> {
+    // If there is an audio element, call play()
+    const audio = document.querySelector('#playerArea audio, #playerArea video');
+    if (audio && audio.play) {
+      try { audio.play(); } catch(e){}
+      return;
+    }
+    // If there is an iframe (YouTube/Spotify embed), try to reload/ensure autoplay param so embedded player plays
+    const iframe = document.querySelector('#playerArea iframe');
+    if (iframe && iframe.src) {
+      try {
+        // ensure autoplay param is set — reload iframe to trigger autoplay where possible
+        let src = String(iframe.src);
+        // avoid duplicating autoplay
+        if (!/autoplay=1/.test(src)) {
+          // remove existing autoplay param if any
+          src = src.replace(/([?&])autoplay=[01](&|$)/, '$1').replace(/(\?&|&&)/g, '&').replace(/\?$/,'');
+          src += (src.includes('?') ? '&' : '?') + 'autoplay=1';
+          iframe.src = src;
+        } else {
+          // force reload to trigger play on some browsers
+          iframe.src = iframe.src;
+        }
+      } catch(e){
+        // fallback: try to open first playlist item
+        const first = document.querySelector('#playlist .reco-item');
+        if (first) {
+          const url = first.dataset.url || first.querySelector('a')?.href || '';
+          if (url) { if (typeof playUrl === 'function') playUrl(url); else window.open(url, '_blank'); }
+        }
+      }
+      return;
+    }
+
+    // default fallback: play first playlist item (open)
+    const first = document.querySelector('#playlist .reco-item');
+    if (first) {
+      const url = first.dataset.url || first.querySelector('a')?.href || '';
+      if (url) {
+        if (typeof playUrl === 'function') playUrl(url); else window.open(url, '_blank');
+      }
+    }
+  });
+
+  if ($('prevBtn')) $('prevBtn').addEventListener('click', ()=> { /* optional: implement track history */ });
+  if ($('nextBtn')) $('nextBtn').addEventListener('click', ()=> { /* optional: advance to next item */ });
+
+  // ---------------------------
+  // Mood timeline sparkline (small, client-side)
+  // ---------------------------
+  const sparkCanvas = $('moodSpark');
+  function drawSparkline(points){
+    if (!sparkCanvas || !sparkCanvas.getContext) return;
+    const ctx = sparkCanvas.getContext('2d');
+    const w = sparkCanvas.width = sparkCanvas.clientWidth * (window.devicePixelRatio||1);
+    const h = sparkCanvas.height = sparkCanvas.clientHeight * (window.devicePixelRatio||1);
+    ctx.clearRect(0,0,w,h);
+    if (!points || !points.length) return;
+    const map = { excited:6, happy:5, neutral:4, tired:3, stressed:2, sad:1, angry:0, off:4, stopped:4 };
+    const vals = points.map(p => map[p.mood] !== undefined ? map[p.mood] : 4);
+    const min = Math.min(...vals), max = Math.max(...vals);
+    ctx.lineWidth = 2 * (window.devicePixelRatio||1);
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0, 'rgba(107,95,168,0.12)');
+    grad.addColorStop(1, 'rgba(110,231,183,0.05)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    vals.forEach((v,i) => {
+      const x = (i/(vals.length-1 || 1))*(w-2) + 1;
+      const y = h - ((v - min) / Math.max(1, (max-min))) * (h-4) - 2;
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.lineTo(w, h); ctx.lineTo(0,h); ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(107,95,168,0.95)';
+    vals.forEach((v,i) => {
+      const x = (i/(vals.length-1 || 1))*(w-2) + 1;
+      const y = h - ((v - min) / Math.max(1, (max-min))) * (h-4) - 2;
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  }
+
+  async function refreshSparkline(){
+    try {
+      const res = await fetch('/api/mood/history');
+      const arr = await res.json();
+      if (Array.isArray(arr) && arr.length) {
+        const recent = arr.slice(-28);
+        drawSparkline(recent);
+      } else {
+        // if server doesn't return history, fall back to local storage
+        const local = loadLocalHistory();
+        if (local && local.length) drawSparkline(local.slice(-28));
+      }
+    } catch(e){
+      // fallback to local
+      const local = loadLocalHistory();
+      if (local && local.length) drawSparkline(local.slice(-28));
+    }
+  }
+  setInterval(refreshSparkline, 60000);
+  refreshSparkline();
+
+  // ---------------------------
+  // Ensure thumbnails fallback
+  // ---------------------------
+  function ensureThumbs(){
+    document.querySelectorAll('.reco-thumb').forEach(img => {
+      img.onerror = () => img.src = '/mnt/data/9e7b4aa3-8d6d-4f7b-a218-a32352eb19b1.png';
+    });
+  }
+  setInterval(ensureThumbs, 1200);
+
+  // ---------------------------
+  // DOMContent loaded: wire search/voice and playback features
+  // ---------------------------
+  document.addEventListener('DOMContentLoaded', ()=> {
+    const searchBtn = $('searchBtn');
+    if (searchBtn) searchBtn.addEventListener('click', ()=> {
+      const q = ($('searchQuery')||{}).value || '';
+      if (!q.trim()) { $('searchResults').innerHTML = '<div class="muted small">Type or speak a search phrase first.</div>'; return; }
+      if (typeof doSearchForPlatform === 'function') doSearchForPlatform($('searchPlatform').value || 'youtube');
+      else triggerFallbackSearch(q);
+    });
+
+    const mirror = $('mirrorToggle');
+    if (mirror) {
+      mirror.addEventListener('change', ()=> {
+        window.PREVIEW_MIRRORED = !!mirror.checked;
+        const v = $('camPreview');
+        if (v) v.style.transform = window.PREVIEW_MIRRORED ? 'scaleX(-1)' : 'none';
+      });
+    }
+
+    // ensure video covers frame (also listen for metadata so we can force-fit once stream attaches)
+    const video = $('camPreview');
+    if (video) {
+      video.addEventListener('loadedmetadata', () => {
+        // in some browsers the first frame may leave small gaps; force full-cover styles again
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.objectPosition = 'center center';
+      });
+      // guard: if camera was already on, trigger adjust
+      setTimeout(()=> {
+        if (video && video.readyState >= 1) {
+          video.dispatchEvent(new Event('loadedmetadata'));
+        }
+      }, 400);
+    }
+  });
+
+  (async function checkApis(){
+    try {
+      const res = await fetch('/api/debug_youtube_auto');
+      const j = await res.json().catch(()=>null);
+      if (j && !j.has_key_on_server) {
+        const el = $('recoList');
+        if (el) el.insertAdjacentHTML('afterbegin', '<div class="muted small">Note: YOUTUBE_API_KEY not found on server — recommendations may be mocked.</div>');
+      }
+    } catch(e) { }
+  })();
+
+  // ---------------------------
+  // Small helper: keep camera height reasonable on different widths
+  // ---------------------------
+  function adjustCameraHeight(){
+    try {
+      const frame = document.querySelector('.camera-frame');
+      if (!frame) return;
+      const availableWidth = frame.clientWidth;
+      // desired aspect: ~16:9 but clamp to a smaller height for compact look
+      const height = Math.max(160, Math.min(260, Math.round(availableWidth * 9 / 16)));
+      frame.style.height = height + 'px';
+      // ensure video covers (reapply)
+      const video = document.getElementById('camPreview');
+      if (video) {
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.objectPosition = 'center center';
+      }
+      // also update the visualizer canvas size for good measure
+      const cv = document.getElementById('camViz');
+      if (cv) {
+        cv.width = Math.floor(cv.clientWidth * (window.devicePixelRatio || 1));
+        cv.height = Math.floor(cv.clientHeight * (window.devicePixelRatio || 1));
+      }
+    } catch(e){}
+  }
+
+  // ============================
+  // NEW: Camera visualizer script
+  // - Particle field + frequency bars
+  // - Reacts to microphone if permission given or to a provided analyser (if your global code exposes it)
+  // - Falls back to idle animation when no mic/analyser
+  // ============================
+  let vizState = {
+    audioCtx: null,
+    analyser: null,
+    dataArray: null,
+    raf: null,
+    particles: [],
+    barCount: 36,
+    lastResize: 0
+  };
+
+  function initCamVisualizer(){
+    const canvas = document.getElementById('camViz');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const DPR = window.devicePixelRatio || 1;
+
+    function resizeCanvas(){
+      canvas.width = Math.floor(canvas.clientWidth * DPR);
+      canvas.height = Math.floor(canvas.clientHeight * DPR);
+    }
+    resizeCanvas();
+
+    // particle setup
+    const P = [];
+    const PART_COUNT = 28;
+    for (let i=0;i<PART_COUNT;i++){
+      P.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: 0.6 + Math.random()*2.4,
+        vx: (Math.random()-0.5) * 0.0015,
+        vy: (Math.random()-0.5) * 0.0015,
+        hue: 260 + Math.random()*100
+      });
+    }
+    vizState.particles = P;
+
+    // attempt to connect to an existing analyser (if your main app creates one)
+    if (window.AUDIO_ANALYSER && window.AUDIO_CONTEXT) {
+      vizState.analyser = window.AUDIO_ANALYSER;
+      vizState.audioCtx = window.AUDIO_CONTEXT;
+    }
+
+    // function to try to create local analyser (only when user clicks startVoiceBtn or on demand)
+    async function ensureLocalAnalyser(){
+      if (vizState.analyser) return vizState.analyser;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ac = vizState.audioCtx || new AudioContext();
+        const source = ac.createMediaStreamSource(stream);
+        const analyser = ac.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        vizState.audioCtx = ac;
+        vizState.analyser = analyser;
+        vizState.dataArray = new Uint8Array(analyser.frequencyBinCount);
+        // update mic status label if present
+        const ms = document.getElementById('micStatus');
+        if (ms) ms.innerText = 'Mic: on';
+      } catch(e){
+        // permission denied or not available: remain in idle mode
+        console.warn('Visualizer: mic access failed or denied', e);
+      }
+    }
+
+    // Hook into your startVoiceBtn if present to attempt to get mic for visualizer
+    const startVoiceBtn = document.getElementById('startVoiceBtn');
+    if (startVoiceBtn) {
+      startVoiceBtn.addEventListener('click', () => {
+        // try connecting to mic for visualizer but silently
+        ensureLocalAnalyser();
+      });
+    }
+    // Also try to use global analyser if project sets it later (poll for it)
+    setTimeout(()=>{ if (!vizState.analyser && window.AUDIO_ANALYSER) { vizState.analyser = window.AUDIO_ANALYSER; vizState.audioCtx = window.AUDIO_CONTEXT || vizState.audioCtx; } }, 1200);
+
+    // draw loop
+    function drawFrame(){
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+
+      // soft radial background
+      const g = ctx.createLinearGradient(0,0,w,h);
+      g.addColorStop(0, 'rgba(140,85,240,0.06)');
+      g.addColorStop(1, 'rgba(110,231,183,0.02)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,w,h);
+
+      // update audio data if analyser present
+      let freq = null;
+      if (vizState.analyser) {
+        try {
+          if (!vizState.dataArray) vizState.dataArray = new Uint8Array(vizState.analyser.frequencyBinCount);
+          vizState.analyser.getByteFrequencyData(vizState.dataArray);
+          freq = vizState.dataArray;
+        } catch(e) {
+          freq = null;
+        }
+      }
+
+      // draw bars across bottom as subtle equalizer
+      const barCount = vizState.barCount;
+      const pad = Math.floor(12 * DPR);
+      const barGap = Math.max(2, Math.floor((w - pad*2) / barCount * 0.12));
+      const barW = Math.max(2, Math.floor((w - pad*2 - (barCount-1)*barGap) / barCount));
+      for (let i=0;i<barCount;i++){
+        const bx = pad + i*(barW+barGap);
+        // sample a frequency slice
+        let val = 20 + (Math.sin((Date.now()/600) + i*0.16) + 1) * 30; // idle baseline
+        if (freq) {
+          const idx = Math.floor(i * (freq.length / barCount));
+          val = Math.max(2, freq[idx] / 255 * (h * 0.48));
+        }
+        const height = Math.min(h * 0.6, val * (DPR));
+        // gradient fill for bars
+        const bg = ctx.createLinearGradient(bx, h, bx, h - height);
+        bg.addColorStop(0, 'rgba(20,20,30,0.14)');
+        bg.addColorStop(1, 'rgba(120,80,240,0.95)');
+        ctx.fillStyle = bg;
+        roundRect(ctx, bx, h - height - Math.floor(8*DPR), barW, height + Math.floor(8*DPR), 4 * DPR, true, false);
+
+        // subtle glow
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = 'rgba(120,80,240,0.06)';
+        ctx.fillRect(bx - 2*DPR, h - height - Math.floor(8*DPR) - 8*DPR, barW + 4*DPR, 10*DPR);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      // draw particles floating up and responding to low freq
+      for (let p of vizState.particles){
+        // update positions
+        p.x += p.vx * (Math.cos(Date.now()/3000 + p.r) * 2);
+        p.y += p.vy * (Math.sin(Date.now()/2400 + p.r) * 2);
+        // keep inside - bounce logic on normalized coordinates
+        if (p.x < -0.06) p.x = 1.06;
+        if (p.x > 1.06) p.x = -0.06;
+        if (p.y < -0.06) p.y = 1.06;
+        if (p.y > 1.06) p.y = -0.06;
+
+        const px = Math.floor(p.x * w);
+        const py = Math.floor(p.y * h * 0.72) + 6 * DPR; // keep particles upper area
+        // size influenced by low frequency (if available)
+        const low = freq ? Math.max(...freq.slice(0, Math.floor(freq.length*0.08))) / 255 : (30 + Math.abs(Math.sin(Date.now()/900 + p.r))*40)/255;
+        const r = Math.max(0.8, p.r * DPR * (1 + low*2));
+
+        // radial glow
+        const rg = ctx.createRadialGradient(px, py, 0, px, py, r*10);
+        rg.addColorStop(0, `rgba(140,85,240,${0.35 + low*0.45})`);
+        rg.addColorStop(1, 'rgba(140,85,240,0)');
+        ctx.fillStyle = rg;
+        ctx.beginPath();
+        ctx.arc(px, py, r*10, 0, Math.PI*2);
+        ctx.fill();
+
+        // core
+        ctx.fillStyle = `hsla(${p.hue}, 70%, ${30 + low*25}%, ${0.95})`;
+        ctx.beginPath();
+        ctx.arc(px, py, r*1.2, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      vizState.raf = requestAnimationFrame(drawFrame);
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      if (r === undefined) r = 5;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    // start animation
+    vizState.raf = requestAnimationFrame(drawFrame);
+
+    // responsive: keep canvas pixel-perfect
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(()=> {
+        resizeCanvas();
+      }, 120);
+    });
+
+    // expose a small API to allow your page to provide an analyser if available later.
+    window.__attachVisualizerAnalyser = function(analyser){ vizState.analyser = analyser; vizState.dataArray = new Uint8Array(analyser.frequencyBinCount); };
+
+    // attempt periodic poll for global analyser if some other script sets it after load
+    let pollCount = 0;
+    (function pollForGlobalAnalyser(){
+      if (!vizState.analyser && window.AUDIO_ANALYSER) {
+        vizState.analyser = window.AUDIO_ANALYSER;
+        vizState.dataArray = new Uint8Array(window.AUDIO_ANALYSER.frequencyBinCount);
+      }
+      pollCount++;
+      if (!vizState.analyser && pollCount < 8) setTimeout(pollForGlobalAnalyser, 700);
+    })();
+  }
+
+  // ---------------------------
+  // RECOMMENDATIONS: Use server-side YouTube endpoint using mood-based queries
+  // This replaces the mocked fallback with a real search using /api/search_youtube
+  // ---------------------------
+  (function provideGetRecoUsingYoutubeAPI(){
+    const mainBtn = document.getElementById('getRecoBtn');
+    if (!mainBtn) return;
+
+    // mood -> query mapping (tweak phrases to taste)
+    const moodQueries = {
+      excited: 'energetic workout music playlist',
+      happy: 'feel good playlist upbeat songs',
+      neutral: 'chill lounge playlist relaxing mix',
+      tired: 'relaxing calm music sleep chill playlist',
+      stressed: 'calming meditation music playlist',
+      sad: 'sad songs playlist emotional music',
+      angry: 'angry release rock playlist heavy music',
+      focused: 'focus music piano playlist study beats'
+    };
+
+    async function fetchRecommendationsForMood(mood){
+      // Build query
+      const q = (mood && moodQueries[mood.toLowerCase()]) ? moodQueries[mood.toLowerCase()] : 'top hits playlist';
+      try {
+        const res = await fetch('/api/search_youtube', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q, maxResults: 10 })
+        });
+        if (!res.ok) throw new Error('search failed');
+        const data = await res.json();
+        // Expecting { results: [...] } or array directly — normalize
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data.results)) return data.results;
+        // Try common shapes (youtube v3 snippet)
+        if (data.items && Array.isArray(data.items)) return data.items;
+        return [];
+      } catch(err){
+        console.warn('Mood reco fetch failed', err);
+        return null;
+      }
+    }
+
+    function renderRecoList(items, moodLabel){
+      const list = document.getElementById('recoList');
+      if (!list) return;
+      list.innerHTML = '';
+      if (!items || !items.length) {
+        list.innerHTML = `<div class="muted">No recommendations found for "${escapeHtml(moodLabel)}".</div>`;
+        return;
+      }
+      for (const it of items) {
+        // support several possible shapes from server
+        const title = it.title || it.snippet?.title || (it.videoTitle) || 'Untitled';
+        const channel = it.channel || it.snippet?.channelTitle || it.author || '';
+        let thumb = it.thumbnail || (it.snippet && it.snippet.thumbnails && (it.snippet.thumbnails.medium?.url || it.snippet.thumbnails.default?.url)) || '';
+        // video url:
+        let url = it.url || it.videoUrl || '';
+        if (!url) {
+          if (it.id) {
+            if (typeof it.id === 'string') url = 'https://www.youtube.com/watch?v=' + it.id;
+            else if (it.id.videoId) url = 'https://www.youtube.com/watch?v=' + it.id.videoId;
+          } else if (it.snippet && it.snippet.resourceId && it.snippet.resourceId.videoId) {
+            url = 'https://www.youtube.com/watch?v=' + it.snippet.resourceId.videoId;
+          }
+        }
+        // fallback thumbnail if we can derive from id
+        if (!thumb && url) {
+          const m = url.match(/[?&]v=([^&]+)/);
+          if (m && m[1]) thumb = 'https://i.ytimg.com/vi/' + m[1] + '/mqdefault.jpg';
+        }
+
+        const itemEl = makeRecoItem({ title: escapeHtml(title), channel: escapeHtml(channel), thumb, url });
+        list.appendChild(itemEl);
+      }
+    }
+
+    // attach handler
+    mainBtn.addEventListener('click', async (e) => {
+      // prefer existing handler if app provided one
+      if (typeof doGetRecommendations === 'function' || typeof doSearchForPlatform === 'function') return;
+      const liveMoodEl = document.getElementById('liveMood');
+      const mood = liveMoodEl ? (liveMoodEl.innerText || '').toLowerCase() : 'neutral';
+      const list = document.getElementById('recoList');
+      if (list) list.innerHTML = `<div class="muted small">Fetching ${escapeHtml(mood)} recommendations…</div>`;
+
+      const results = await fetchRecommendationsForMood(mood);
+      if (results === null) {
+        // final fallback: show friendly message and mocked items
+        const msg = document.createElement('div'); msg.className = 'muted small';
+        msg.innerText = 'Recommendations currently unavailable from server. Showing sample items.';
+        if (list) list.innerHTML = '';
+        if (list) list.appendChild(msg);
+        // show previous mocked items so UI isn't empty
+        const items = [
+          { title: 'Chill Night — AI Mix', meta: 'YouTube • Mood: neutral', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+          { title: 'Upbeat Energy — Quick Boost', meta: 'Spotify • Mood: excited', url: 'https://www.youtube.com/watch?v=3JZ4pnNtyxQ' },
+          { title: 'Deep Focus — Coding Beats', meta: 'YouTube Music • Mood: focused', url: 'https://www.youtube.com/watch?v=2Vv-BfVoq4g' }
+        ];
+        items.forEach(it => {
+          const el = makeRecoItem({ title: it.title, channel: it.meta, thumb: '', url: it.url });
+          if (list) list.appendChild(el);
+        });
+        return;
+      }
+
+      // Normalize and render results
+      renderRecoList(results, mood);
+    });
+  })();
+
+  // ---------------------------
+  // FALLBACK for Get Recommendations button (removed old mock)
+  // If your real recommendation handler exists (server or client), it will run instead.
+  // The new logic above will call /api/search_youtube with mood queries (server uses the venv API key).
+  // ---------------------------
+
+  // ============================
+  // Lively Mood History: live updates + persistence + UI rendering
+  // - Observes faceMood, voiceMood and liveMood changes and appends history items
+  // - Persists to localStorage (mood_history_local)
+  // - Attempts to POST to /api/mood/add if available (non-blocking)
+  // ============================
+  (function liveMoodHistory(){
+
+    const LS_KEY = 'mood_history_local';
+    const MAX_ENTRIES = 300; // cap to avoid unbounded growth
+
+    function loadLocalHistory(){
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return [];
+        return arr;
+      } catch(e){ return []; }
+    }
+    function saveLocalHistory(arr){
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(arr.slice(-MAX_ENTRIES)));
+      } catch(e){}
+    }
+
+    function renderHistoryUI(){
+      const hist = document.getElementById('moodHistory');
+      const insCount = document.getElementById('insCount');
+      const insCurrent = document.getElementById('insCurrent');
+      const insFace = document.getElementById('insFace');
+      const insVoice = document.getElementById('insVoice');
+
+      const arr = loadLocalHistory();
+      if (!hist) return;
+      if (!arr.length) {
+        hist.innerHTML = '<div class="muted">No history yet — mood events will appear here.</div>';
+        if (insCount) insCount.innerText = '0';
+        return;
+      }
+
+      hist.innerHTML = '';
+      // show newest first
+      const shown = arr.slice(-60).reverse();
+      for (const ev of shown) {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.dataset.time = ev.time || '';
+        div.dataset.mood = ev.mood || '';
+        div.style.padding = '8px';
+        div.style.borderBottom = '1px dashed rgba(255,255,255,0.02)';
+        div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+                          <div>
+                            <div style="font-weight:800; text-transform:capitalize;">${escapeHtml(ev.mood || '')}</div>
+                            <div class="muted small">${escapeHtml(ev.source || '')} • ${new Date(ev.time).toLocaleTimeString()}</div>
+                          </div>
+                          <div class="muted small">${escapeHtml(ev.note || '')}</div>
+                         </div>`;
+        hist.appendChild(div);
+      }
+
+      if (insCount) insCount.innerText = String(arr.length);
+      if (insCurrent) insCurrent.innerText = (arr.length ? arr[arr.length-1].mood : 'neutral');
+      if (insFace) insFace.innerText = (document.getElementById('faceMood')?.innerText || 'off');
+      if (insVoice) insVoice.innerText = (document.getElementById('voiceMood')?.innerText || 'stopped');
+
+      // redraw sparkline using local history if server not available
+      try {
+        drawSparkline(arr.slice(-28));
+      } catch(e){}
+    }
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    // Append a new mood event (updates UI + storage + optional server call)
+    async function appendMoodEvent({ mood, source='auto', note='' }){
+      if (!mood) return;
+      const now = new Date().toISOString();
+      const arr = loadLocalHistory();
+      // avoid duplicate sequential entries with same mood+source
+      const last = arr.length ? arr[arr.length-1] : null;
+      if (last && last.mood === mood && last.source === source) {
+        // still update UI timing and small note if provided
+        last.time = now;
+        if (note) last.note = note;
+        saveLocalHistory(arr);
+        renderHistoryUI();
+        return;
+      }
+
+      const ev = { time: now, mood, source, note };
+      arr.push(ev);
+      saveLocalHistory(arr);
+      renderHistoryUI();
+
+      // try to notify server non-blocking
+      try {
+        fetch('/api/mood/add', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(ev)
+        }).catch(()=>{});
+      } catch(e){}
+    }
+
+    // Expose a small programmatic API if other scripts want to push events
+    window.pushMoodEvent = function(mood, source, note){ appendMoodEvent({mood, source, note}); };
+
+    // Observe changes to faceMood, voiceMood and liveMood and push events
+    function observeMoodNodes(){
+      const face = document.getElementById('faceMood');
+      const voice = document.getElementById('voiceMood');
+      const combined = document.getElementById('liveMood');
+
+      let lastFace = face ? face.innerText : null;
+      let lastVoice = voice ? voice.innerText : null;
+      let lastCombined = combined ? combined.innerText : null;
+
+      const createObs = (el, type) => {
+        if (!el) return;
+        const mo = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            if (m.type === 'childList' || m.type === 'characterData' || m.type === 'subtree') {
+              const val = el.innerText.trim();
+              if (type === 'face' && val !== lastFace) {
+                lastFace = val;
+                appendMoodEvent({ mood: val, source: 'face' });
+              }
+              if (type === 'voice' && val !== lastVoice) {
+                lastVoice = val;
+                appendMoodEvent({ mood: val, source: 'voice' });
+              }
+              if (type === 'combined' && val !== lastCombined) {
+                lastCombined = val;
+                appendMoodEvent({ mood: val, source: 'combined' });
+              }
+            }
+          }
+        });
+        mo.observe(el, { characterData: true, childList: true, subtree: true });
+      };
+
+      createObs(face, 'face');
+      createObs(voice, 'voice');
+      createObs(combined, 'combined');
+
+      // Also hook into any custom events (if other scripts fire them)
+      window.addEventListener('mood:update', (ev) => {
+        try {
+          const d = ev.detail || {};
+          if (d.mood) appendMoodEvent({ mood: d.mood, source: d.source || 'event', note: d.note || '' });
+        } catch(e){}
+      });
+    }
+
+    // On initial load, render UI from local storage and attempt to fetch server history
+    (function init(){
+      // try to hydrate from server first (non-blocking)
+      fetch('/api/mood/history').then(r => r.json()).then(arr => {
+        if (Array.isArray(arr) && arr.length) {
+          // merge server history into local storage (keep order)
+          const local = loadLocalHistory();
+          const merged = local.concat(arr).slice(-MAX_ENTRIES);
+          saveLocalHistory(merged);
+          renderHistoryUI();
+          return;
+        }
+        // otherwise render local
+        renderHistoryUI();
+      }).catch(()=> {
+        renderHistoryUI();
+      });
+
+      // start observing for live updates
+      observeMoodNodes();
+
+      // also refresh UI periodically (in case other code updates nodes directly)
+      setInterval(renderHistoryUI, 5000);
+    })();
+
+  })();
+
+  // ============================
+  // NEW: Combined mood calculator
+  // - Observes faceMood + voiceMood and computes a combined mood
+  // - Minimal, self-contained, won't modify other code
+  // ============================
+  (function computeCombinedMood(){
+    const map = { excited:6, happy:5, neutral:4, tired:3, stressed:2, sad:1, angry:0, off:4, stopped:4 };
+    const candidates = [
+      { v:6, mood:'excited' },
+      { v:5, mood:'happy' },
+      { v:4, mood:'neutral' },
+      { v:3, mood:'tired' },
+      { v:2, mood:'stressed' },
+      { v:1, mood:'sad' },
+      { v:0, mood:'angry' },
+    ];
+
+    function normalizeText(s){ return String(s||'').trim().toLowerCase(); }
+    function pickClosestMood(score){
+      let best = candidates[0];
+      let bestDiff = Math.abs(score - best.v);
+      for (const c of candidates) {
+        const d = Math.abs(score - c.v);
+        if (d < bestDiff) { best = c; bestDiff = d; }
+      }
+      return best.mood;
+    }
+    function capitalize(s){ if (!s) return ''; return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    function computeAndSet(){
+      const faceEl = document.getElementById('faceMood');
+      const voiceEl = document.getElementById('voiceMood');
+      const liveEl = document.getElementById('liveMood');
+      if (!liveEl) return;
+
+      const faceRaw = faceEl ? normalizeText(faceEl.innerText) : '';
+      const voiceRaw = voiceEl ? normalizeText(voiceEl.innerText) : '';
+
+      // If both empty, leave as neutral
+      if (!faceRaw && !voiceRaw) {
+        setLive('neutral');
+        return;
+      }
+
+      // If face absent (off) but voice present -> use voice
+      if ((faceRaw === 'off' || faceRaw === 'none' || faceRaw === '') && voiceRaw && voiceRaw !== 'stopped') {
+        setLive(voiceRaw);
+        return;
+      }
+
+      // If voice stopped but face present -> use face
+      if ((voiceRaw === 'stopped' || voiceRaw === 'none' || voiceRaw === '') && faceRaw && faceRaw !== 'off') {
+        setLive(faceRaw);
+        return;
+      }
+
+      // Otherwise compute weighted average
+      const faceVal = map[faceRaw] !== undefined ? map[faceRaw] : 4;
+      const voiceVal = map[voiceRaw] !== undefined ? map[voiceRaw] : 4;
+      const score = (faceVal * 0.6) + (voiceVal * 0.4);
+      const chosen = pickClosestMood(score);
+      setLive(chosen);
+    }
+
+    let lastSet = '';
+    function setLive(moodRaw){
+      const liveEl = document.getElementById('liveMood');
+      if (!liveEl) return;
+      const norm = normalizeText(moodRaw);
+      if (norm === lastSet) return; // avoid redundant DOM updates
+      lastSet = norm;
+      liveEl.innerText = capitalize(norm || 'neutral');
+      // Announce to screen readers (polite)
+      liveEl.setAttribute('aria-live', 'polite');
+      // also update quick-insights
+      const insCurrent = document.getElementById('insCurrent');
+      if (insCurrent) insCurrent.innerText = capitalize(norm || 'neutral');
+      // optional: you can dispatch a custom event if other code wants to react
+      try { window.dispatchEvent(new CustomEvent('combined:mood', { detail: { mood: norm } })); } catch(e){}
+    }
+
+    // Observe face/voice nodes
+    function watchNodes(){
+      const face = document.getElementById('faceMood');
+      const voice = document.getElementById('voiceMood');
+      if (!face && !voice) return;
+
+      const obs = new MutationObserver(() => { computeAndSet(); });
+      if (face) obs.observe(face, { childList: true, characterData: true, subtree: true });
+      if (voice) obs.observe(voice, { childList: true, characterData: true, subtree: true });
+
+      // also update on startup
+      setTimeout(computeAndSet, 120);
+      // and periodically in case other scripts modify text without triggering MutationObserver
+      setInterval(computeAndSet, 1200);
+    }
+
+    // init
+    document.addEventListener('DOMContentLoaded', watchNodes);
+    // also in case script runs after DOMContentLoaded
+    if (document.readyState === 'interactive' || document.readyState === 'complete') watchNodes();
+    // expose small API
+    window.recomputeCombined = computeAndSet;
+  })();
+
+  // ---------------------------
+  // Small helper: keep camera height reasonable on different widths (already declared earlier)
+  // (no changes)
+  // ---------------------------
+
+})();
+</script>
+
+{% endblock %}

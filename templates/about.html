@@ -1,0 +1,1065 @@
+{% extends "base.html" %}
+{% block title %}About – AI Music Motion{% endblock %}
+
+{% block content %}
+<!-- About page — rewritten to be more dynamic, visual, and section-localized.
+     Each section contains its own <style> and <script> immediately below it (as requested),
+     so you can edit each section's styles/scripts without searching the whole file.
+-->
+
+<!-- HERO -->
+<section class="about-hero fade-up" style="margin-top:36px; position:relative; overflow:visible;">
+  <div class="hero-left">
+    <div class="kicker">About the project</div>
+    <h1 class="h1-hero">AI Music Motion — emotion-driven music discovery</h1>
+    <p class="lead">We fuse live face expression analysis and voice emotion heuristics to recommend and play music automatically. Designed for privacy-first demos — processing happens client-side for face/voice, with server-side APIs used only for music search/recommendation.</p>
+
+    <div class="card-cta">
+      <a class="deep-cta" href="/dashboard">Try Live Demo</a>
+      <a class="btn" href="/contact">Contact Integrations</a>
+      <div class="version-pill">
+        <div style="font-weight:800">Version</div>
+        <div class="small pill">v1.0-demo</div>
+      </div>
+    </div>
+
+    <!-- quick stats -->
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-number" data-target="98">0</div>
+        <div class="stat-label small">Client-side processing (%)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" data-target="4">0</div>
+        <div class="stat-label small">Supported moods</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" data-target="300">0</div>
+        <div class="stat-label small">Monthly demo plays</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <!-- animated gradient blob + card stack -->
+    <div class="hero-visual">
+      <div class="blob-bg" aria-hidden="true"></div>
+
+      <div class="card-stack">
+        <div class="stack-card top">
+          <img src="/static/images/live_mood_player.jpeg" alt="project art" loading="lazy">
+          <div class="card-caption">Live Mood Player</div>
+        </div>
+
+        <div class="stack-card mid">
+          <img src="/static/images/visualizer_sparkline.jpeg" alt="art2" loading="lazy">
+          <div class="card-caption">Visualizer & Sparkline</div>
+        </div>
+
+        <div class="stack-card bot">
+          <div class="mini-wave" aria-hidden="true"></div>
+          <div class="card-caption">Privacy-first</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* HERO local styles */
+  .about-hero { display:grid; grid-template-columns:1fr 420px; gap:28px; align-items:center; min-height:360px; }
+  @media(max-width:980px){ .about-hero { grid-template-columns:1fr; } }
+
+  .kicker { color:var(--muted); font-weight:700; font-size:0.9rem; letter-spacing:0.6px; margin-bottom:6px; }
+  .h1-hero { font-size:2.2rem; line-height:1.05; margin:0 0 10px 0; font-weight:800; }
+  .lead { color:var(--muted); font-size:1.02rem; max-width:54ch; margin-bottom:14px; }
+
+  .card-cta { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center; }
+  .deep-cta { display:inline-block; padding:12px 18px; border-radius:12px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#071225; font-weight:800; text-decoration:none; box-shadow:0 18px 40px rgba(107,95,168,0.12); }
+  .btn { padding:10px 14px; border-radius:10px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--text); text-decoration:none; font-weight:800; }
+  .version-pill { display:flex; align-items:center; gap:8px; margin-left:6px; }
+  .pill { background:rgba(255,255,255,0.02); padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); }
+
+  .hero-stats { display:flex; gap:14px; margin-top:18px; flex-wrap:wrap; }
+  .stat { background:rgba(255,255,255,0.01); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.02); min-width:120px; text-align:center; }
+  .stat-number { font-weight:900; font-size:1.25rem; }
+  .stat-label { color:var(--muted); margin-top:6px; }
+
+  .hero-right { position:relative; display:flex; justify-content:center; align-items:center; }
+  .hero-visual { width:100%; max-width:380px; position:relative; height:320px; display:flex; align-items:center; justify-content:center; }
+  .blob-bg { position:absolute; inset:6px; border-radius:18px; background:linear-gradient(135deg, rgba(139,92,246,0.18), rgba(110,231,183,0.08)); filter:blur(18px) saturate(120%); transform:rotate(-6deg) scale(1.02); z-index:1; box-shadow: inset 0 2px 18px rgba(255,255,255,0.02); }
+
+  .card-stack { position:relative; z-index:2; width:320px; height:260px; display:flex; align-items:center; justify-content:center; }
+  .stack-card { position:absolute; width:86%; height:64%; border-radius:12px; overflow:hidden; display:flex; align-items:flex-end; justify-content:flex-start; padding:12px; box-shadow:0 20px 50px rgba(2,6,23,0.28); border:1px solid rgba(255,255,255,0.03); background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06)); transition:transform .38s cubic-bezier(.2,.9,.2,1); }
+  .stack-card img { width:100%; height:100%; object-fit:cover; position:absolute; left:0; top:0; opacity:0.95; }
+  .stack-card .card-caption { position:relative; z-index:3; color:white; font-weight:800; text-shadow:0 6px 18px rgba(0,0,0,0.6); }
+
+  .stack-card.top { transform:translateY(-24px) rotate(-3deg); left:8%; }
+  .stack-card.mid { transform:translateY(6px) rotate(2deg); left:2%; width:88%; }
+  .stack-card.bot { transform:translateY(36px) rotate(-1deg); left:0; width:92%; height:48%; background:linear-gradient(90deg, rgba(110,231,183,0.06), rgba(139,92,246,0.06)); }
+  .mini-wave { width:100%; height:100%; background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent); opacity:0.9; border-radius:8px; }
+
+  /* subtle hover parallax */
+  .about-hero:hover .stack-card.top { transform:translateY(-30px) rotate(-4deg) scale(1.02); }
+  .about-hero:hover .stack-card.mid { transform:translateY(2px) rotate(3deg) scale(1.01); }
+  .about-hero:hover .stack-card.bot { transform:translateY(40px) rotate(-0.5deg) scale(1.01); }
+
+  /* fade-up visible */
+  .fade-up.is-visible { transform:none; opacity:1; transition:all 560ms cubic-bezier(.16,.84,.08,1); }
+</style>
+
+<script>
+  // HERO local script: animate stat counters
+  (function(){
+    function animateCounters() {
+      document.querySelectorAll('.stat-number').forEach(el => {
+        const target = Number(el.dataset.target || el.getAttribute('data-target') || el.textContent || 0);
+        let current = 0;
+        const step = Math.max(1, Math.floor(target / 40));
+        const id = setInterval(()=> {
+          current += step;
+          if (current >= target) { el.textContent = target; clearInterval(id); }
+          else el.textContent = current;
+        }, 18);
+      });
+    }
+    // run when visible
+    try {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { animateCounters(); obs.disconnect(); } });
+      }, { threshold: 0.2 });
+      const hero = document.querySelector('.about-hero');
+      if (hero) obs.observe(hero);
+      else animateCounters();
+    } catch(e){ animateCounters(); }
+  })();
+</script>
+
+<!-- FEATURES -->
+<section class="features fade-up" style="margin-top:40px;">
+  <h2 class="section-title">Key Features</h2>
+
+  <div class="feature-grid">
+    <article class="feature-card" data-tilt>
+      <div class="feature-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 2zm1 13h-2v-2h2v2zm0-4h-2V6h2v5z"/></svg>
+      </div>
+      <div class="feature-body">
+        <h4>Real-time Face Mood</h4>
+        <p class="small">Client-side landmark heuristics (MediaPipe) analyze expression intensity to determine emotion quickly and privately without sending images to the server.</p>
+      </div>
+    </article>
+
+    <article class="feature-card" data-tilt>
+      <div class="feature-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v10.55A4 4 0 1 0 14 17V3h-2z"/></svg>
+      </div>
+      <div class="feature-body">
+        <h4>Voice Emotion</h4>
+        <p class="small">WebAudio RMS, pitch and spectral features — heuristics plus optional TF models map audio to emotion classes for low-latency detection.</p>
+      </div>
+    </article>
+
+    <article class="feature-card" data-tilt>
+      <div class="feature-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 4l2 4 4 .5-3 3 .7 4L12 14l-3.7 2.5.7-4L6 8.5 10 8z"/></svg>
+      </div>
+      <div class="feature-body">
+        <h4>Smart Recommendations</h4>
+        <p class="small">Server adapters query YouTube &amp; Spotify when configured. Otherwise, intelligent local fallbacks and mood-to-query mapping keep suggestions relevant.</p>
+      </div>
+    </article>
+
+    <article class="feature-card" data-tilt>
+      <div class="feature-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 7h10v10H7z"/></svg>
+      </div>
+      <div class="feature-body">
+        <h4>Seamless Playback</h4>
+        <p class="small">YouTube/Spotify embeds are used where possible. When embeds are blocked, graceful fallbacks open content without breaking the user experience.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<style>
+  /* FEATURES local styles (updated for spacing, wrapping & responsiveness) */
+  .section-title { margin:0 0 12px 0; font-size:1.6rem; font-weight:800; color:var(--text); }
+
+  /* Responsive columns: 4 / 3 / 2 / 1 depending on width */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-top: 18px;
+    align-items: start;
+  }
+  @media (max-width:1200px) {
+    .feature-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width:900px) {
+    .feature-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width:620px) {
+    .feature-grid { grid-template-columns: 1fr; }
+  }
+
+  .feature-card {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 18px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.004));
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 8px 26px rgba(2,6,23,0.25);
+    transition: transform .28s ease, box-shadow .28s ease;
+    min-height: 120px;           /* help equalize heights */
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 24px 60px rgba(2,6,23,0.36);
+  }
+
+  /* icon box sized so text has enough width and won't wrap prematurely */
+  .feature-icon {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(90deg, rgba(139,92,246,0.14), rgba(110,231,183,0.08));
+    color: var(--accent-2);
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  .feature-icon svg { display: block; width: 28px; height: 28px; }
+
+  /* body contains heading + paragraph, takes remaining space */
+  .feature-body { flex: 1 1 auto; min-width: 0; }
+  .feature-body h4 {
+    margin: 0 0 8px 0;
+    font-weight: 800;
+    font-size: 1.02rem;
+    color: var(--text);
+    line-height: 1.05;
+  }
+  .feature-body p.small {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    hyphens: auto;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  /* small tilt effect (CSS-only fallback) */
+  [data-tilt]:hover { transform: perspective(600px) rotateX(3deg) rotateY(-3deg); }
+
+  /* Improve legibility on dark gradients */
+  .feature-card, .feature-icon { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+  /* Make sure long paragraphs don't stretch card height too much on narrow screens */
+  @media (max-width:620px) {
+    .feature-card { min-height: auto; padding: 14px; gap: 10px; }
+    .feature-icon { width:56px; height:56px; min-width:56px; }
+  }
+</style>
+
+<script>
+  // FEATURES local script: subtle staggered entry (keeps it lightweight)
+  (function(){
+    const items = document.querySelectorAll('.feature-card');
+    items.forEach((it, idx) => {
+      it.style.opacity = '0';
+      it.style.transform = 'translateY(10px)';
+      it.style.transition = 'opacity .48s ease ' + (idx*70) + 'ms, transform .48s cubic-bezier(.2,.9,.2,1) ' + (idx*70) + 'ms';
+    });
+    function reveal(){
+      items.forEach((it, idx) => {
+        setTimeout(()=> {
+          it.style.opacity = '1';
+          it.style.transform = 'translateY(0)';
+        }, idx * 70);
+      });
+    }
+    // reveal on DOMContentLoaded or when section becomes visible
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(reveal, 140);
+    } else {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(reveal, 140));
+    }
+
+    // small accessibility improvement: make cards focusable for keyboard users
+    items.forEach(it => { it.setAttribute('tabindex', '0'); it.addEventListener('focus', () => it.classList.add('focused')); it.addEventListener('blur', () => it.classList.remove('focused')); });
+  })();
+</script>
+
+
+<!-- HOW IT WORKS TIMELINE -->
+<section class="timeline-section fade-up" style="margin-top:40px;">
+  <h2 class="section-title">How it works</h2>
+
+  <div class="timeline-grid">
+    <ol class="timeline" aria-label="Process steps">
+      <li class="timeline-item">
+        <div class="num">1</div>
+        <div class="content">
+          <strong>Capture</strong>
+          <p class="small">Webcam and microphone capture streams after user permission. All local by default.</p>
+        </div>
+      </li>
+
+      <li class="timeline-item">
+        <div class="num">2</div>
+        <div class="content">
+          <strong>Analyze</strong>
+          <p class="small">Face landmarks + audio features are computed client-side. Heuristics estimate mood.</p>
+        </div>
+      </li>
+
+      <li class="timeline-item">
+        <div class="num">3</div>
+        <div class="content">
+          <strong>Recommend</strong>
+          <p class="small">Frontend sends mood to server; server maps mood to queries and fetches tracks when configured.</p>
+        </div>
+      </li>
+
+      <li class="timeline-item">
+        <div class="num">4</div>
+        <div class="content">
+          <strong>Play</strong>
+          <p class="small">Playable embeds are inserted; if embeddable checks fail, we open watch/open pages or curated fallbacks.</p>
+        </div>
+      </li>
+    </ol>
+
+    <!-- Right-side image panel -->
+    <figure class="timeline-image" role="img" aria-label="Illustration showing process flow">
+      <img src="/static/images/timeline_illustration.jpeg" alt="How it works illustration" loading="lazy" />
+      <figcaption class="visually-hidden">Illustration: Capture → Analyze → Recommend → Play</figcaption>
+
+      <!-- subtle decorative overlay circles -->
+      <div class="overlay-circle overlay-a" aria-hidden="true"></div>
+      <div class="overlay-circle overlay-b" aria-hidden="true"></div>
+    </figure>
+  </div>
+</section>
+
+<style>
+  /* TIMELINE local styles */
+  .timeline-section { margin-top: 40px; }
+
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 980px) {
+    .timeline-grid { grid-template-columns: 1fr; }
+  }
+
+  .section-title { margin:0 0 12px 0; font-size:1.6rem; font-weight:800; color:var(--text); }
+
+  .timeline {
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .42s ease, transform .42s cubic-bezier(.2,.9,.2,1);
+  }
+
+  /* shown state (added by reveal observer in base) */
+  .fade-up.is-visible .timeline-item { opacity: 1; transform: translateY(0); }
+
+  .timeline-item .num {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(90deg,var(--accent),var(--accent-2));
+    color: #071225;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    box-shadow: 0 12px 34px rgba(107,95,168,0.12);
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  .timeline-item .content {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.01);
+    border: 1px solid rgba(255,255,255,0.02);
+    min-width: 0;
+  }
+
+  .timeline-item .content strong { display:block; margin-bottom:6px; font-weight:800; color:var(--text); }
+  .timeline-item p { margin:0; color:var(--muted); line-height:1.45; }
+
+  /* Right-side image panel */
+  .timeline-image {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 240px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 14px 40px rgba(2,6,23,0.28);
+  }
+
+  .timeline-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display:block;
+    mix-blend-mode: normal;
+    transform-origin: center;
+    transition: transform .9s cubic-bezier(.16,.96,.08,1), filter .6s ease;
+    will-change: transform, filter;
+  }
+
+  /* subtle hover/tilt parallax on image (desktop only) */
+  @media (hover: hover) and (pointer: fine) {
+    .timeline-image:hover img { transform: scale(1.03) translateY(-6px); filter: saturate(1.08) contrast(1.03); }
+  }
+
+  /* overlay decorative circles */
+  .overlay-circle {
+    position:absolute;
+    border-radius:50%;
+    pointer-events:none;
+    filter: blur(36px);
+    opacity: 0.18;
+  }
+  .overlay-a { width:220px; height:220px; right: -40px; bottom: -20px; background: linear-gradient(90deg, rgba(110,231,183,0.12), rgba(139,92,246,0.08)); }
+  .overlay-b { width:120px; height:120px; left: -30px; top: -40px; background: linear-gradient(90deg, rgba(139,92,246,0.10), rgba(110,231,183,0.06)); }
+
+  /* small screens: make image shorter and center it */
+  @media (max-width: 980px) {
+    .timeline-image { min-height: 200px; }
+    .overlay-a { display:none; }
+    .overlay-b { display:none; }
+  }
+
+  /* accessibility helper (visually-hidden) */
+  .visually-hidden {
+    position: absolute !important;
+    height: 1px; width: 1px;
+    overflow: hidden; clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap; border: 0; padding: 0; margin: -1px;
+  }
+</style>
+
+<script>
+  // TIMELINE local script: stagger reveal + optional image parallax on pointer move
+  (function(){
+    // stagger reveal for individual timeline items
+    const items = document.querySelectorAll('.timeline-item');
+    items.forEach((n, i) => {
+      n.style.transitionDelay = (i * 90) + 'ms';
+    });
+
+    // gentle parallax for right image on pointer move (desktop only)
+    const imgPanel = document.querySelector('.timeline-image');
+    const img = imgPanel?.querySelector('img');
+    if (imgPanel && img && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      imgPanel.addEventListener('pointermove', (ev) => {
+        const r = imgPanel.getBoundingClientRect();
+        const dx = (ev.clientX - (r.left + r.width/2)) / r.width;
+        const dy = (ev.clientY - (r.top + r.height/2)) / r.height;
+        // subtle transform
+        img.style.transform = `translate(${dx * 6}px, ${dy * -6}px) scale(1.03)`;
+      });
+      imgPanel.addEventListener('pointerleave', () => {
+        img.style.transform = 'scale(1.03) translateY(-6px)';
+      });
+    }
+
+    // ensure timeline items become visible when section is observed (works with your reveal observer)
+    const section = document.querySelector('.timeline-section.fade-up');
+    if (section) {
+      // if the base reveal observer adds .is-visible to the section, timeline item CSS will animate
+      // add a fallback: if intersection observer is not present, reveal after short timeout
+      if (!('IntersectionObserver' in window)) {
+        setTimeout(()=> section.classList.add('is-visible'), 180);
+      } else {
+        // add a small one-off observer to ensure .is-visible is added to section on enter (in case base doesn't)
+        const io = new IntersectionObserver((entries, ob) => {
+          entries.forEach(en => {
+            if (en.isIntersecting) {
+              section.classList.add('is-visible');
+              ob.disconnect();
+            }
+          });
+        }, { threshold: 0.06 });
+        io.observe(section);
+      }
+    }
+  })();
+</script>
+
+<!-- ===========================
+     TESTIMONIALS (FULL UPDATED)
+=========================== -->
+<section class="testimonials fade-up" style="margin-top:40px;">
+  <h2 class="section-title">What people say</h2>
+
+  <div class="carousel" id="testiCarousel" aria-roledescription="carousel">
+    
+    <!-- SLIDES -->
+    <div class="carousel-slides" id="testiSlides">
+      
+      <!-- Slide 1 -->
+      <div class="carousel-slide active">
+        <div class="testimonial">
+          <div class="avatar-wrap">
+            <img src="/static/images/avatar_1.jpeg" alt="User 1">
+          </div>
+          <div class="testimonial-body">
+            <div class="title">Recommender works like magic 🎵</div>
+            <div class="small">"The emotion-based picks match my vibe — great demo!"</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="carousel-slide">
+        <div class="testimonial">
+          <div class="avatar-wrap">
+            <img src="/static/images/avatar_2.jpeg" alt="User 2">
+          </div>
+          <div class="testimonial-body">
+            <div class="title">Easy to integrate</div>
+            <div class="small">"I added the demo to my project quickly — client-side modules are neat."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="carousel-slide">
+        <div class="testimonial">
+          <div class="avatar-wrap">
+            <img src="/static/images/avatar_3.jpeg" alt="User 3">
+          </div>
+          <div class="testimonial-body">
+            <div class="title">Creative UX</div>
+            <div class="small">"Feeling the music adapt to my mood is surprisingly delightful."</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Navigation arrows -->
+    <button class="carousel-control prev" id="testiPrev">◀</button>
+    <button class="carousel-control next" id="testiNext">▶</button>
+
+    <!-- Dots -->
+    <div class="carousel-dots" id="testiDots"></div>
+
+  </div>
+</section>
+
+<style>
+/* ===========================
+   TESTIMONIALS STYLES
+=========================== */
+
+.carousel {
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.03);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  padding: 20px 0;
+  overflow: hidden;
+}
+
+/* Fade slide mechanism */
+.carousel-slides {
+  position: relative;
+  min-height: 140px;
+}
+
+.carousel-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s ease;
+  pointer-events: none;
+  display: flex;
+  justify-content: center; /* CENTER */
+  align-items: center;     /* CENTER */
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Testimonial box */
+.testimonial {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  max-width: 600px;   /* Center width */
+  width: 100%;
+  text-align: left;
+}
+
+/* Avatar wrapper + glow */
+.avatar-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  overflow: visible;
+}
+
+.avatar-wrap img {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+  transition: transform .4s, filter .4s;
+}
+
+.avatar-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 22px;
+  background: radial-gradient(circle at 30% 20%, rgba(139,92,246,0.15), rgba(110,231,183,0.10), transparent);
+  filter: blur(12px);
+  opacity: 0.8;
+  z-index: -1;
+  transition: 0.45s ease;
+}
+
+.carousel-slide.active .avatar-wrap img {
+  transform: scale(1.05);
+  filter: saturate(1.12);
+}
+
+/* Body */
+.testimonial-body .title {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.testimonial-body .small {
+  color: var(--muted);
+}
+
+/* Controls */
+.carousel-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: rgba(0,0,0,0.40);
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  cursor: pointer;
+  z-index: 10;
+  transition: 0.2s ease;
+}
+.carousel-control:hover {
+  background: rgba(0,0,0,0.55);
+  transform: translateY(-50%) scale(1.04);
+}
+.carousel-control.prev { left: 14px; }
+.carousel-control.next { right: 14px; }
+
+/* Dots */
+.carousel-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 10px;
+}
+.carousel-dots button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: rgba(255,255,255,0.25);
+  transition: 0.2s ease;
+}
+.carousel-dots button.active {
+  background: linear-gradient(90deg,var(--accent),var(--accent-2));
+  width: 12px;
+  height: 12px;
+  transform: scale(1.12);
+  box-shadow: 0 4px 16px rgba(139,92,246,0.25);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .testimonial {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+}
+</style>
+
+<script>
+/* ===========================
+   TESTIMONIALS LOGIC
+=========================== */
+
+(function(){
+  const slides = [...document.querySelectorAll(".carousel-slide")];
+  const dotsWrap = document.getElementById("testiDots");
+  const prevBtn = document.getElementById("testiPrev");
+  const nextBtn = document.getElementById("testiNext");
+
+  let index = 0;
+
+  /* Create dots */
+  slides.forEach((_, i) => {
+    const b = document.createElement("button");
+    if (i === 0) b.classList.add("active");
+    b.addEventListener("click", () => goTo(i));
+    dotsWrap.appendChild(b);
+  });
+
+  const dots = [...dotsWrap.children];
+
+  function updateSlides() {
+    slides.forEach((s, i) => s.classList.toggle("active", i === index));
+    dots.forEach((d, i) => d.classList.toggle("active", i === index));
+  }
+
+  function goTo(i) {
+    index = (i + slides.length) % slides.length;
+    updateSlides();
+  }
+
+  function next() { goTo(index + 1); }
+  function prev() { goTo(index - 1); }
+
+  nextBtn.addEventListener("click", next);
+  prevBtn.addEventListener("click", prev);
+
+  /* Autoplay */
+  setInterval(next, 4500);
+})();
+</script>
+
+
+<!-- LONG CONTENT GRID (Deep Dive) -->
+<section class="deep-dive fade-up" style="margin-top:40px;">
+  <h2 class="section-title">Deep Dive</h2>
+  <div class="long-grid">
+    <div class="long-card">
+      <h4>Face heuristics</h4>
+      <p class="small">The face module uses MediaPipe FaceMesh landmarks and geometric heuristics to compute smile, mouth openness and eye openness. This lightweight approach is fast on mobiles and avoids sending facial images to servers.</p>
+    </div>
+
+    <div class="long-card">
+      <h4>Audio features</h4>
+      <p class="small">voice.js leverages WebAudio API: RMS for energy, autocorrelation for pitch estimate, and frequency bins for spectral centroid — used in mapping to emotional categories.</p>
+    </div>
+
+    <div class="long-card">
+      <h4>Server & APIs</h4>
+      <p class="small">Flask endpoints provide search and recommendation logic. YouTube & Spotify keys (if set) enable richer server-side recommendations and embeddable playback checks.</p>
+    </div>
+
+    <div class="long-card">
+      <h4>Privacy</h4>
+      <p class="small">By default, only mood labels are sent to the server — not raw audio or video. This design reduces data leakage and makes it suitable for demos and internal prototypes.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* DEEP DIVE local styles */
+  .long-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin-top:18px; }
+  .long-card { padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); background:rgba(255,255,255,0.01); transition:transform .28s; }
+  .long-card:hover { transform:translateY(-6px); box-shadow:0 20px 60px rgba(2,6,23,0.28); }
+  .long-card h4 { margin:0 0 8px 0; }
+  .long-card p { margin:0; color:var(--muted); }
+</style>
+
+<script>
+  // DEEP DIVE local script: nothing complex needed here (placeholder)
+  (function(){ /* placeholder for deeper interactivity if you want */ })();
+</script>
+
+<!-- ===========================
+     FAQ (UPDATED) — FAQ + RIGHT-SIDE IMAGE
+     Each section keeps its own <style> and <script> immediately below it.
+=========================== -->
+<section class="faq-section fade-up" style="margin-top:40px;">
+  <h2 class="section-title">Frequently asked questions</h2>
+
+  <div class="faq-grid">
+
+    <!-- LEFT: FAQ list -->
+    <div class="faq-col" role="list">
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false">
+          How accurate is emotion detection?
+          <span class="toggle" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-a" hidden>
+          Accuracy varies by lighting, microphone quality and facial visibility. Heuristics are conservative — they work best with clear frontal camera and moderate audio levels. For production, consider validated TF models.
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false">
+          Are my camera &amp; microphone data sent to the server?
+          <span class="toggle" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-a" hidden>
+          No. Face &amp; audio processing is done locally in your browser by default. Only mood labels and non-sensitive telemetry (if enabled) are sent to the Flask backend.
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem">
+        <button class="faq-q" aria-expanded="false">
+          Which browsers are supported?
+          <span class="toggle" aria-hidden="true">▼</span>
+        </button>
+        <div class="faq-a" hidden>
+          Modern Chromium-based browsers and Firefox work best. Mobile Safari has partial support for WebRTC and WebAudio; results may vary on iOS.
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Illustration -->
+    <aside class="faq-illustration" aria-hidden="false">
+      <div class="illustration-card">
+        <img src="/static/images/faq_for_about.jpeg" alt="Illustration showing mood detection and music recommendations" loading="lazy">
+        <div class="ill-overlay">
+          <div class="pill">Live • Private • Local</div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<style>
+  /* FAQ GRID */
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 24px;
+    align-items: start;
+    margin-top: 12px;
+  }
+  @media (max-width: 980px) {
+    .faq-grid { grid-template-columns: 1fr; }
+  }
+
+  /* FAQ column */
+  .faq-col { display: grid; gap: 10px; }
+
+  .faq-item {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.014);
+    transition: box-shadow .22s ease, transform .18s ease;
+  }
+  .faq-item:focus-within, .faq-item:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.28); }
+
+  .faq-q {
+    width:100%;
+    padding: 14px 16px;
+    cursor: pointer;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    border:none;
+    background:transparent;
+    text-align:left;
+    font-weight:700;
+    color:var(--text);
+    font-size:1rem;
+  }
+  .faq-q:focus { outline: 3px solid rgba(139,92,246,0.12); outline-offset:2px; border-radius:8px; }
+
+  .faq-q .toggle {
+    margin-left:12px;
+    color:var(--muted);
+    font-weight:800;
+  }
+
+  .faq-a {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,0.02);
+    color: var(--muted);
+    line-height:1.5;
+    background: linear-gradient(180deg, rgba(255,255,255,0.006), transparent);
+  }
+
+  /* ILLUSTRATION (right column) */
+  .faq-illustration { display:flex; align-items:center; justify-content:center; }
+  .illustration-card {
+    width:100%;
+    max-width:420px;
+    border-radius:12px;
+    overflow:hidden;
+    position:relative;
+    box-shadow: 0 14px 44px rgba(2,6,23,0.30);
+    border: 1px solid rgba(255,255,255,0.03);
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));
+    min-height:220px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .illustration-card img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transition: transform .9s cubic-bezier(.16,.96,.08,1), filter .45s ease;
+    will-change: transform;
+  }
+
+  .illustration-card:hover img { transform: scale(1.03) translateY(-6px); filter: saturate(1.06); }
+
+  .ill-overlay {
+    position:absolute;
+    left:12px;
+    bottom:12px;
+    z-index:3;
+    pointer-events:none;
+  }
+  .ill-overlay .pill {
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    color:#071225;
+    padding:8px 12px;
+    border-radius:999px;
+    font-weight:800;
+    box-shadow: 0 10px 30px rgba(139,92,246,0.12);
+  }
+
+  /* Small screens: put illustration below FAQ and reduce height */
+  @media (max-width: 980px) {
+    .illustration-card { min-height:160px; margin-top:12px; }
+    .ill-overlay { left:10px; bottom:10px; }
+  }
+</style>
+
+<script>
+  // FAQ local script: accessible toggle + small reveal animation for the image
+  (function(){
+    // Toggle logic for each FAQ item
+    document.querySelectorAll('.faq-item').forEach(fi => {
+      const btn = fi.querySelector('.faq-q');
+      const content = fi.querySelector('.faq-a');
+
+      btn.addEventListener('click', () => {
+        const isOpen = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!isOpen));
+        btn.querySelector('.toggle').textContent = isOpen ? '▼' : '▲';
+        if (isOpen) {
+          // collapse with animation
+          content.style.maxHeight = null;
+          // hide after transition
+          setTimeout(() => content.hidden = true, 260);
+        } else {
+          // open: ensure visible then animate
+          content.hidden = false;
+          content.style.maxHeight = '0px';
+          // next tick -> set full height
+          requestAnimationFrame(() => {
+            const full = content.scrollHeight + 'px';
+            content.style.transition = 'max-height 260ms ease';
+            content.style.maxHeight = full;
+          });
+        }
+      });
+
+      // ensure keyboard accessible (Enter/Space)
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+      });
+    });
+
+    // gentle reveal for illustration when section becomes visible
+    try {
+      const ill = document.querySelector('.illustration-card img');
+      if (!ill) return;
+      const io = new IntersectionObserver((entries, ob) => {
+        entries.forEach(en => {
+          if (en.isIntersecting) {
+            ill.style.transform = 'scale(1.02) translateY(-6px)';
+            ill.style.filter = 'saturate(1.04)';
+            ob.disconnect();
+          }
+        });
+      }, { threshold: 0.14 });
+      io.observe(ill);
+    } catch(e){}
+  })();
+</script>
+
+<!-- CTA FOOTER -->
+<section class="cta-footer fade-up" style="margin-top:40px;margin-bottom:40px;text-align:center;">
+  <h3 style="margin:0 0 10px 0;font-weight:800;">Ready to experiment?</h3>
+  <p class="small" style="margin:0 0 16px 0">Head to Dashboard to try live face & voice mood detection and auto-play recommendations.</p>
+  <a class="deep-cta" href="/dashboard">Open Dashboard</a>
+</section>
+
+<style>
+  /* CTA local styles */
+  .cta-footer .deep-cta { padding:12px 20px; border-radius:14px; }
+</style>
+
+<script>
+  // CTA local: no script required (reserved)
+  (function(){})();
+</script>
+
+<!-- Global reveal on scroll for this page (keeps each section isolated but still uses a shared reveal) -->
+<script>
+  (function(){
+    try {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (en.isIntersecting) en.target.classList.add('is-visible');
+        });
+      }, { threshold: 0.08 });
+      document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+    } catch(e){}
+  })();
+</script>
+
+{% endblock %}

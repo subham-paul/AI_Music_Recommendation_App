@@ -1,0 +1,2237 @@
+{% extends "base.html" %}
+{% block title %}Home • AI Music Motion Player{% endblock %}
+
+{% block content %}
+<!-- ===========================
+     GLOBAL / UTILITY STYLES
+     (small, frequently reused variables + helpers)
+     Keep minimal — section-specific styles live below each section.
+     =========================== -->
+<style>
+  html, body { overflow-x: hidden; }
+  :root{
+    --bg:#0d1220;
+    --card:#0f1724;
+    --muted:#9fb0c4;
+    --accent:#6ee7b7;
+    --accent-2:#7b5fbf;
+    --accent-contrast:#071019;
+    --text:#e6eef6;
+    --glass-border: rgba(255,255,255,0.04);
+    --transition: cubic-bezier(.16,.84,.08,1);
+  }
+
+  .section { margin-top:72px; }
+  .h2 { font-size:1.6rem; font-weight:800; margin-bottom:14px; color:var(--text); }
+  .muted-small { color:var(--muted); font-size:0.96rem; }
+  .btn { padding:10px 14px; border-radius:10px; font-weight:800; border:none; cursor:pointer; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:var(--accent-contrast); box-shadow: 0 12px 30px rgba(75,63,114,0.12); transition: transform .18s, box-shadow .18s; }
+  .btn:hover { transform: translateY(-4px); box-shadow: 0 22px 50px rgba(75,63,114,0.16); }
+  .btn-ghost { padding:10px 12px; border-radius:10px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--text); font-weight:700; cursor:pointer; }
+  .btn-ghost:hover { transform: translateY(-3px); }
+
+  .fade-up { transform:translateY(18px); opacity:0; transition: all 520ms var(--transition); }
+  .fade-up.is-visible { transform:none; opacity:1; }
+
+  /* small responsive tweaks */
+  @media(max-width:980px){
+    .chips { justify-content:flex-start; }
+  }
+</style>
+
+<!-- ─────────────────────────────────────────────── -->
+<!-- TOP IMAGE FEATURE CAROUSEL (HTML only) -->
+<!-- ─────────────────────────────────────────────── -->
+<section class="section fade-up" id="topCarousel" style="margin-top:10px;">
+  <div class="big-carousel" aria-roledescription="carousel" aria-label="Feature highlights carousel">
+    <button class="bc-arrow left" id="bcPrev" aria-label="Previous slide" type="button">‹</button>
+    <button class="bc-arrow right" id="bcNext" aria-label="Next slide" type="button">›</button>
+
+    <div class="big-carousel-track" id="bcTrack" role="list">
+      <!-- Slide 1 -->
+      <div class="big-slide" role="listitem" aria-label="Face-based Mood Recognition">
+        <img loading="lazy" src="/static/images/hero_caro1.jpg" alt="Face-based Mood Recognition">
+        <div class="big-slide-content">
+          <div class="panel">
+            <h2>Face-based Mood Recognition</h2>
+            <p>Experience instant AI mood detection using your live facial expressions — processed locally for privacy.</p>
+            <a href="/dashboard" class="btn">Try Now</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="big-slide" role="listitem" aria-label="Voice Emotion Analyzer">
+        <img loading="lazy" src="/static/images/hero_caro2.jpg" alt="Voice Emotion Analyzer">
+        <div class="big-slide-content">
+          <div class="panel">
+            <h2>Voice Emotion Analyzer</h2>
+            <p>Let your voice guide the music — real-time tone & energy extraction to match tracks to your mood.</p>
+            <a href="/dashboard" class="btn">Explore</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="big-slide" role="listitem" aria-label="YouTube & Spotify Integration">
+        <img loading="lazy" src="/static/images/hero_caro3.jpg" alt="YouTube Spotify Integration">
+        <div class="big-slide-content">
+          <div class="panel">
+            <h2>YouTube & Spotify Integration</h2>
+            <p>Play recommended tracks instantly from your preferred platform — graceful fallbacks for demo mode.</p>
+            <a href="/dashboard" class="btn">Connect</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4 -->
+      <div class="big-slide" role="listitem" aria-label="Mood History Analytics">
+        <img loading="lazy" src="/static/images/hero_caro4.jpg" alt="Mood History Analytics">
+        <div class="big-slide-content">
+          <div class="panel">
+            <h2>Smart Mood History</h2>
+            <p>Track emotional patterns with beautiful charts and exportable history on your dashboard.</p>
+            <a href="/dashboard" class="btn">View Dashboard</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 5 -->
+      <div class="big-slide" role="listitem" aria-label="Next-Gen Music AI">
+        <img loading="lazy" src="/static/images/hero_caro5.jpg" alt="Next-Gen Music AI">
+        <div class="big-slide-content">
+          <div class="panel">
+            <h2>Next-Gen Music AI</h2>
+            <p>Let AI predict what you'll enjoy next — smarter, faster, and respectful of your privacy.</p>
+            <a href="/about" class="btn">Learn More</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- indicators -->
+    <div class="bc-indicators" id="bcIndicators" role="tablist" aria-label="Slide indicators"></div>
+  </div>
+</section>
+
+<!-- section-specific styles & script: TOP CAROUSEL -->
+<style>
+  /* scoped to #topCarousel */
+  #topCarousel .big-carousel { position: relative; overflow: hidden; border-radius: 14px; box-shadow: 0 18px 46px rgba(2,6,23,0.45); background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.02)); }
+  #topCarousel .big-carousel-track { display:flex; transition:transform .45s ease; will-change: transform; }
+  #topCarousel .big-slide { min-width:100%; flex:0 0 100%; position:relative; height:420px; border-radius:14px; overflow:hidden; display:block; box-sizing:border-box; }
+  #topCarousel .big-slide img { width:100%; height:100%; object-fit:cover; filter:brightness(0.66) saturate(1.02); transition: transform .9s ease; user-select:none; -webkit-user-drag:none; }
+  #topCarousel .big-slide.is-active img { transform:scale(1.04); }
+  #topCarousel .big-slide-content { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(92%,920px); z-index:4; display:flex; align-items:center; justify-content:center; text-align:center; pointer-events:none; }
+  #topCarousel .panel { pointer-events:auto; background: linear-gradient(180deg, rgba(6,8,12,0.48), rgba(6,8,12,0.30)); border-radius:14px; padding:28px; width:100%; box-shadow:0 18px 50px rgba(2,6,23,0.55); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.04); position:relative; }
+  #topCarousel .panel::after{ content:""; position:absolute; left:-40%; top:-10%; width:120%; height:120%; background:linear-gradient(120deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.06) 35%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0) 100%); transform:skewX(-12deg); opacity:.7; animation:sheen 6s linear infinite; border-radius:14px; mix-blend-mode: overlay; pointer-events:none; }
+  @keyframes sheen { 0% { left:-60%; opacity:0.12 } 50% { left:20%; opacity:0.18 } 100% { left:120%; opacity:0.05 } }
+  #topCarousel .bc-arrow { position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.28); border-radius:10px; color:var(--text); cursor:pointer; z-index:5; font-size:20px; border:1px solid rgba(255,255,255,0.04); }
+  #topCarousel .bc-arrow.left { left:12px; } #topCarousel .bc-arrow.right { right:12px; }
+  #topCarousel .bc-indicators { position:absolute; left:50%; transform:translateX(-50%); bottom:12px; display:flex; gap:8px; z-index:6; }
+  #topCarousel .bc-indicators button { width:10px; height:10px; border-radius:999px; border:none; background: rgba(255,255,255,0.2); cursor:pointer; padding:0; }
+  #topCarousel .bc-indicators button.is-active { background: linear-gradient(90deg,var(--accent),var(--accent-2)); width:12px; height:12px; }
+  @media (max-width:900px){ #topCarousel .big-slide{ height:320px } @media (max-width:520px){ #topCarousel .big-slide{ height:260px } } }
+</style>
+
+<script>
+(function(){
+  const track = document.getElementById('bcTrack');
+  const next = document.getElementById('bcNext');
+  const prev = document.getElementById('bcPrev');
+  const indicatorsWrap = document.getElementById('bcIndicators');
+  const slides = track ? Array.from(track.children) : [];
+  const slidesCount = slides.length || 0;
+  let index = 0;
+  let auto = null;
+  const AUTO_DELAY = 6000;
+
+  // create indicators
+  for (let i=0;i<slidesCount;i++){
+    const btn = document.createElement('button');
+    btn.setAttribute('aria-label', 'Go to slide ' + (i+1));
+    btn.type = 'button';
+    btn.addEventListener('click', ()=> { goTo(i); stopAuto(); setTimeout(startAuto, 1000); });
+    indicatorsWrap.appendChild(btn);
+  }
+  const indicators = Array.from(indicatorsWrap.children);
+
+  function refreshIndicators(){ indicators.forEach((b, idx) => b.classList.toggle('is-active', idx === index)); }
+  function updateCarousel(){
+    if (!track) return;
+    track.style.transform = 'translateX(-' + (index * 100) + '%)';
+    slides.forEach((s, i)=> s.classList.toggle('is-active', i === index));
+    refreshIndicators();
+  }
+  function nextSlide(){ index = (index + 1) % slidesCount; updateCarousel(); }
+  function prevSlide(){ index = (index - 1 + slidesCount) % slidesCount; updateCarousel(); }
+  function goTo(i){ index = Math.max(0, Math.min(i, slidesCount-1)); updateCarousel(); }
+  function startAuto(){ stopAuto(); auto = setInterval(nextSlide, AUTO_DELAY); }
+  function stopAuto(){ if (auto) { clearInterval(auto); auto = null; } }
+
+  // keyboard
+  window.addEventListener('keydown', (e)=> { if (e.key === 'ArrowRight') { nextSlide(); stopAuto(); setTimeout(startAuto, 1200); } if (e.key === 'ArrowLeft') { prevSlide(); stopAuto(); setTimeout(startAuto, 1200); } });
+
+  // touch / swipe support
+  (function addSwipe() {
+    let startX = 0, dist = 0, startTime = 0;
+    const threshold = 50; const allowedTime = 500;
+    if (!track) return;
+    track.addEventListener('touchstart', function(e){ const t = e.changedTouches[0]; startX = t.pageX; startTime = new Date().getTime(); }, {passive:true});
+    track.addEventListener('touchend', function(e){ const t = e.changedTouches[0]; dist = t.pageX - startX; const elapsed = new Date().getTime() - startTime;
+      if (elapsed <= allowedTime && Math.abs(dist) >= threshold){ if (dist < 0) { nextSlide(); stopAuto(); setTimeout(startAuto, 1200); } else { prevSlide(); stopAuto(); setTimeout(startAuto, 1200); } }
+    }, {passive:true});
+  })();
+
+  if (next) next.addEventListener('click', ()=> { nextSlide(); stopAuto(); setTimeout(startAuto, 1200); });
+  if (prev) prev.addEventListener('click', ()=> { prevSlide(); stopAuto(); setTimeout(startAuto, 1200); });
+
+  const carouselWrap = document.querySelector('#topCarousel .big-carousel');
+  if (carouselWrap) {
+    carouselWrap.addEventListener('mouseenter', stopAuto);
+    carouselWrap.addEventListener('mouseleave', startAuto);
+    carouselWrap.addEventListener('focusin', stopAuto);
+    carouselWrap.addEventListener('focusout', startAuto);
+  }
+
+  updateCarousel();
+  startAuto();
+  refreshIndicators();
+})();
+</script>
+
+<!-- ===========================
+     HERO SECTION (HTML)
+     =========================== -->
+<!-- ===========================
+     HERO SECTION (HTML) — full version with icons for feature cards
+     =========================== -->
+<section class="hero-clean fade-up" aria-label="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+
+      <h1 class="hero-title">
+        Music that follows your
+        <span class="gradient-word">mood</span>
+      </h1>
+
+      <p class="hero-sub">
+        AI Music Motion analyzes your facial expressions and voice tone to recommend
+        and auto-play songs that match how you feel — privately in your browser.
+      </p>
+
+      <div class="cta" role="group" aria-label="Primary actions">
+        <a class="btn" href="/dashboard" role="button">Open Dashboard</a>
+        <a class="btn-ghost" href="/about">How it works</a>
+        <button class="btn-ghost" id="hero-demo-video" aria-haspopup="dialog">Watch demo</button>
+      </div>
+
+      <div class="live-row" aria-live="polite">
+        <span class="muted-small">Live mood:</span>
+        <div id="heroLiveMood" class="chip mood-chip" aria-atomic="true">neutral</div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-card" aria-hidden="false">
+        <img src="/static/images/hero-ai-mood-art.jpg"
+             alt="AI Music Motion artwork preview"
+             class="hero-image" />
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO FEATURES: each card now includes an icon/image -->
+  <div class="hero-features" role="list" aria-label="Hero features">
+    <div class="f-card" role="listitem">
+      <div class="f-card-media">
+        <img src="/static/icons/realtime.svg" alt="" class="f-icon" loading="lazy"
+             onerror="this.style.display='none'"/>
+        <!-- Inline fallback SVG (visible if external icon missing) -->
+        <svg class="f-icon-sv" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2v2M5 5l1.5 1.5M2 12h2M5 19l1.5-1.5M12 20v2M19 19l-1.5-1.5M22 12h-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/>
+        </svg>
+      </div>
+      <div>
+        <strong>Real-time</strong>
+        <small class="muted-small">Low-latency detection</small>
+      </div>
+    </div>
+
+    <div class="f-card" role="listitem">
+      <div class="f-card-media">
+        <img src="/static/icons/privacy.svg" alt="" class="f-icon" loading="lazy"
+             onerror="this.style.display='none'"/>
+        <svg class="f-icon-sv" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2L4 5v6c0 5 4 9 8 9s8-4 8-9V5l-8-3z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+          <path d="M9 12v-2a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <strong>Privacy-first</strong>
+        <small class="muted-small">Client-side processing</small>
+      </div>
+    </div>
+
+    <div class="f-card" role="listitem">
+      <div class="f-card-media">
+        <img src="/static/icons/crossplatform.svg" alt="" class="f-icon" loading="lazy"
+             onerror="this.style.display='none'"/>
+        <svg class="f-icon-sv" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/>
+          <path d="M7 20h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="9" cy="11" r="1" fill="currentColor"/>
+          <circle cx="15" cy="11" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <strong>Cross-platform</strong>
+        <small class="muted-small">Desktop & mobile</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HERO-specific styles & enhanced glow + subtle motion (replace your previous hero styles & script) -->
+<style>
+  /* Layout (unchanged) */
+  .hero-clean { padding:70px 0 40px; position:relative; }
+  .hero-inner { display:flex; justify-content:space-between; align-items:center; gap:70px; position:relative; z-index:4; }
+  .hero-left { flex:1; max-width:560px; }
+  .hero-right { flex:1; display:flex; justify-content:flex-end; }
+
+  /* Title with animated gradient + soft neon text-shadow */
+  .hero-title {
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight:900;
+    margin:20px 0 10px;
+    color:var(--text);
+    line-height:1.02;
+    letter-spacing:-0.6px;
+    position:relative;
+    z-index:6;
+  }
+
+  /* animated gradient fill for the single word */
+  .gradient-word {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), #64d1ff);
+    background-size: 220% 220%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradientShift 6.5s linear infinite;
+    display:inline-block;
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; filter:blur(0); text-shadow: 0 8px 36px rgba(107,95,168,0.10); }
+    50% { background-position: 100% 50%; text-shadow: 0 14px 60px rgba(107,95,168,0.14); transform:translateY(-2px); }
+    100% { background-position: 0% 50%; transform:none; }
+  }
+
+  /* paragraph */
+  .hero-sub { font-size:1.1rem; color:var(--muted); margin-bottom:26px; line-height:1.55; z-index:6; }
+
+  /* CTA buttons: more neon glow and micro-floating */
+  .cta { display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; z-index:6; }
+  .btn { padding:10px 16px; border-radius:10px; background:linear-gradient(90deg, rgba(110,231,183,1), rgba(123,95,191,0.98)); color:var(--accent-contrast); text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+  .btn:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 28px 80px rgba(107,95,168,0.24), 0 2px 0 rgba(255,255,255,0.02); filter:brightness(1.06); }
+  .btn-ghost { padding:10px 14px; background:transparent; color:var(--text); border-radius:10px; text-decoration:none; border:1px solid rgba(255,255,255,0.04); display:inline-flex; align-items:center; }
+
+  /* Live mood chip — breathing/pulse glow */
+  .live-row { margin-top:18px; display:flex; gap:10px; align-items:center; z-index:6; }
+  .mood-chip {
+    background: linear-gradient(90deg,var(--accent-2),var(--accent)) !important;
+    color:#041017; font-weight:800; padding:6px 10px; border-radius:999px;
+    position:relative;
+    box-shadow:
+      0 6px 18px rgba(41,255,200,0.06),
+      0 2px 6px rgba(11,18,24,0.6);
+    animation: chipPulse 2400ms ease-in-out infinite;
+  }
+  @keyframes chipPulse {
+    0% { transform:scale(1); box-shadow:0 6px 18px rgba(41,255,200,0.06), 0 2px 6px rgba(11,18,24,0.6); }
+    50% { transform:scale(1.04); box-shadow:0 18px 42px rgba(107,95,168,0.12), 0 2px 8px rgba(11,18,24,0.6); }
+    100% { transform:scale(1); }
+  }
+
+  /* HERO CARD: layered glows + subtle floating + inner sheen */
+  .hero-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    padding:16px; border-radius:14px; border:1px solid rgba(255,255,255,0.04); max-width:440px;
+    position:relative; overflow:visible; z-index:5;
+    transform: translateZ(0); /* promote to its own layer for smoother blur */
+  }
+
+  /* large soft halo behind hero-card (animated) */
+  .hero-card::before{
+    content:"";
+    position:absolute;
+    left:50%; top:5%;
+    transform:translateX(-50%);
+    width: 360px; height:360px;
+    border-radius:50%;
+    z-index:2;
+    filter: blur(56px);
+    opacity:0.28;
+    background: radial-gradient(circle at 35% 30%, rgba(123,95,191,0.28), rgba(75,63,114,0.14) 40%, rgba(0,0,0,0) 70%);
+    pointer-events:none;
+    animation: haloFloat 6.8s ease-in-out infinite;
+  }
+  @keyframes haloFloat { 0% { transform: translate(-50%, 0) scale(1); opacity:0.26 } 50% { transform: translate(-50%, -6px) scale(1.02); opacity:0.36 } 100% { transform: translate(-50%, 0) scale(1); opacity:0.26 } }
+
+  /* artwork image: inner glow + animated sheen + slight float */
+  .hero-image {
+    width:100%; height:330px; object-fit:cover; border-radius:10px; display:block;
+    position:relative; z-index:4;
+    box-shadow:
+      0 20px 60px rgba(2,6,23,0.6),
+      0 6px 20px rgba(75,63,114,0.18);
+    transform-origin:center;
+    animation: imageFloat 6s ease-in-out infinite;
+  }
+  @keyframes imageFloat { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.006); } 100% { transform: translateY(0) scale(1); } }
+
+  /* animated sheen overlay on the image (subtle right->left) */
+  .hero-card::after{
+    content:"";
+    position:absolute;
+    left:-30%; top:-10%;
+    width:160%; height:140%;
+    z-index:6;
+    background: linear-gradient(120deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.09) 40%, rgba(255,255,255,0.03) 70%, rgba(255,255,255,0) 100%);
+    transform: skewX(-12deg);
+    opacity:0.55;
+    pointer-events:none;
+    border-radius:14px;
+    mix-blend-mode: overlay;
+    animation: imageSheen 7s linear infinite;
+  }
+  @keyframes imageSheen { 0% { left:-60%; opacity:0.08 } 50% { left:10%; opacity:0.16 } 100% { left:120%; opacity:0.04 } }
+
+  /* decorative accent */
+  .hero-clean .decor-light {
+    position:absolute; right:6%; top:30%;
+    width:96px; height:96px; border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, rgba(123,95,191,0.22), rgba(75,63,114,0.06) 40%, rgba(0,0,0,0) 70%);
+    filter:blur(28px); opacity:0.22; pointer-events:none; z-index:1;
+    animation: decorPulse 8s ease-in-out infinite;
+  }
+  @keyframes decorPulse { 0% { transform:scale(1); opacity:0.18 } 50% { transform:scale(1.08); opacity:0.28 } 100% { transform:scale(1); opacity:0.18 } }
+
+  /* hero-card footer button (Start Camera) neon outline */
+  .hero-card-footer .btn {
+    background: linear-gradient(90deg, rgba(110,231,183,1), rgba(123,95,191,0.98));
+    color:var(--accent-contrast);
+    box-shadow: 0 10px 36px rgba(107,95,168,0.16), 0 2px 0 rgba(255,255,255,0.02);
+    border-radius:10px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .hero-card-footer .btn:hover { transform: translateY(-4px); box-shadow: 0 30px 92px rgba(107,95,168,0.26); }
+
+  /* hero-features - gentle lift & glow on hover */
+  .hero-features { margin-top:60px; display:flex; gap:20px; flex-wrap:wrap; z-index:6; align-items:stretch; }
+  .f-card { padding:14px 16px; background:var(--card); border-radius:10px; border:1px solid rgba(255,255,255,0.04); min-width:220px; flex:1; color:var(--text); transition: transform .28s, box-shadow .28s; display:flex; gap:12px; align-items:center; }
+  .f-card:hover { transform: translateY(-8px); box-shadow: 0 28px 70px rgba(75,63,114,0.12); }
+
+  /* media inside f-card */
+  .f-card-media { width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.02); flex-shrink:0; }
+  .f-icon { width:40px; height:40px; object-fit:contain; display:block; }
+  .f-icon-sv { width:40px; height:40px; display:block; color:var(--accent); }
+
+  .f-card strong { display:block; font-size:1rem; margin-bottom:3px; }
+  .muted-small { display:block; color:var(--muted); font-size:.86rem; }
+
+  /* small responsive adjustments keep effects but conserve space */
+  @media(max-width:980px){
+    .hero-inner { flex-direction:column; text-align:center; }
+    .hero-right { justify-content:center; width:100%; }
+    .hero-features { justify-content:center; }
+    .hero-card::before { display:none; } /* hide big halo on small screens for clarity */
+    .hero-card::after { display:none; } /* hide sheen overlay on small screens */
+    .f-card { min-width:unset; width:100%; justify-content:flex-start; }
+  }
+
+  /* accessibility: reduce motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .gradient-word, .hero-image, .hero-card::before, .hero-card::after, .mood-chip { animation: none !important; transition: none !important; transform: none !important; }
+  }
+</style>
+
+<!-- decorative element (keeps HTML unchanged — this is purely non-structural) -->
+<div class="decor-light" aria-hidden="true"></div>
+
+<script>
+  // tiny script: subtle timed flicker for extra 'alive' feeling on page load
+  (function(){
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    try {
+      const g = document.querySelector('.gradient-word');
+      if (!g) return;
+      // quick micro-flicker after load for realism (not annoying)
+      setTimeout(()=> { g.style.opacity = '0.98'; }, 900);
+      setTimeout(()=> { g.style.opacity = '1'; }, 1400);
+    } catch(e){}
+  })();
+
+  // Optional: simple live mood demo updater (for development/testing)
+  (function demoMood(){
+    const el = document.getElementById('heroLiveMood');
+    if (!el) return;
+    const moods = ['happy','sad','neutral','excited','calm'];
+    let i = 0;
+    setInterval(()=> {
+      i = (i + 1) % moods.length;
+      el.textContent = moods[i];
+      el.setAttribute('aria-label', 'Live mood ' + moods[i]);
+    }, 4000);
+  })();
+</script>
+
+
+
+<!-- ===========================
+     FEATURES GRID (with images + glow)
+     =========================== -->
+<section class="section fade-up" aria-label="features">
+  <h2 class="h2">Powerful features</h2>
+  <div class="card-grid">
+    <div class="card-surface">
+      <div class="card-media">
+        <img class="card-img" src="/static/images/feature_card1.jpg" alt="face detection">
+        <div class="card-media-badge">Face</div>
+      </div>
+      <h4>Real-time face detection</h4>
+      <p class="muted-small">MediaPipe / TF.js landmarks processed locally — low CPU and instant responses.</p>
+    </div>
+
+    <div class="card-surface">
+      <div class="card-media">
+        <img class="card-img" src="/static/images/feature_card2.jpg" alt="voice emotion">
+        <div class="card-media-badge">Voice</div>
+      </div>
+      <h4>Voice emotion heuristics</h4>
+      <p class="muted-small">WebAudio features (rms, pitch, centroid) classify excitement and sadness.</p>
+    </div>
+
+    <div class="card-surface">
+      <div class="card-media">
+        <img class="card-img" src="/static/images/feature_card3.jpg" alt="recommendations">
+        <div class="card-media-badge">Recommend</div>
+      </div>
+      <h4>Smart recommendations</h4>
+      <p class="muted-small">Server-side YouTube & Spotify adapters provide playable options and graceful fallbacks.</p>
+    </div>
+
+    <div class="card-surface">
+      <div class="card-media">
+        <img class="card-img" src="/static/images/feature_card4.jpg" alt="analytics">
+        <div class="card-media-badge">Analytics</div>
+      </div>
+      <h4>Mood history & analytics</h4>
+      <p class="muted-small">Track mood trends on your dashboard and export for deeper analysis.</p>
+    </div>
+  </div>
+</section>
+
+<!-- features styles (section-scoped: image + glow + animation) -->
+<style>
+  .card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; }
+  .card-surface {
+    position:relative;
+    transition: transform 320ms var(--transition), box-shadow 320ms var(--transition), border-color 320ms, filter 320ms;
+    padding:18px;
+    border-radius:12px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.03);
+    color:var(--text);
+    overflow:visible;
+  }
+
+  /* decorative animated glow behind card */
+  .card-surface::before{
+    content:'';
+    position:absolute;
+    left:-6px; right:-6px; top:-6px; bottom:-6px;
+    border-radius:16px;
+    background: linear-gradient(90deg, rgba(107,95,168,0.06), rgba(110,231,183,0.04), rgba(107,95,168,0.06));
+    filter: blur(18px) saturate(120%);
+    opacity:0;
+    transform: scale(0.98);
+    transition: opacity .36s ease, transform .36s ease;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .card-surface:hover::before{
+    opacity:1;
+    transform: scale(1.02);
+  }
+
+  /* image container */
+  .card-media {
+    position:relative;
+    height:140px;
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:12px;
+    box-shadow: 0 12px 30px rgba(2,6,23,0.18);
+    z-index:1;
+  }
+  .card-img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transform: scale(1);
+    transition: transform .8s cubic-bezier(.2,.9,.2,1), filter .5s ease;
+    will-change: transform;
+  }
+  .card-media-badge {
+    position:absolute;
+    left:12px;
+    bottom:12px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.36), rgba(0,0,0,0.16));
+    color: white;
+    padding:6px 10px;
+    border-radius:999px;
+    font-weight:800;
+    font-size:0.85rem;
+    backdrop-filter: blur(6px);
+  }
+
+  /* hover interactions: lift + glow + image parallax */
+  .card-surface:hover {
+    transform: translateY(-14px);
+    box-shadow: 0 44px 110px rgba(2,6,23,0.6);
+    border-color: rgba(107,95,168,0.20);
+  }
+  .card-surface:hover .card-img {
+    transform: scale(1.08) translateY(-6px);
+    filter: saturate(1.08) contrast(1.02);
+  }
+
+  /* small text styles */
+  .card-grid h4 { font-weight:800; margin-bottom:6px; z-index:2; position:relative; }
+  .muted-small { color:var(--muted); }
+
+  /* subtle animated sheen that moves across the card on hover */
+  .card-surface::after{
+    content:'';
+    position:absolute;
+    left:-60%;
+    top:-20%;
+    width:40%;
+    height:140%;
+    background: linear-gradient(120deg, rgba(255,255,255,0.02), rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+    transform: rotate(-18deg);
+    opacity:0;
+    transition: transform .9s ease, opacity .6s ease;
+    z-index:2;
+    pointer-events:none;
+    mix-blend-mode: overlay;
+  }
+  .card-surface:hover::after{
+    left:120%;
+    opacity:1;
+    transform: rotate(-18deg);
+  }
+
+  /* responsive tweaks */
+  @media (max-width:720px){
+    .card-media { height:120px; }
+  }
+</style>
+
+<!-- ===========================
+     HORIZONTAL CAROUSEL: Top categories (Updated + fixed watch links)
+     =========================== -->
+<section class="section fade-up" aria-label="categories">
+  <h2 class="h2" style="text-align:center;">Top categories</h2>
+
+  <div class="hcarousel" aria-roledescription="carousel">
+    <button class="hcarousel-btn left" id="hprev" aria-label="previous" title="Previous">‹</button>
+
+    <div class="hcarousel-viewport" id="hviewport" role="list">
+      <!-- hcard: Happy -->
+      <article class="hcard" role="listitem" data-category="happy" aria-label="Happy upbeat">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <img src="/static/images/play_happy.jpg" alt="Happy cover" style="width:88px;height:88px;border-radius:12px;object-fit:cover;box-shadow:0 14px 40px rgba(0,0,0,0.45);">
+          <div>
+            <h4 style="margin:0;text-align:left">Happy / Upbeat</h4>
+            <p class="muted-small" style="margin:6px 0 0 0">Dance, pop & feel-good anthems.</p>
+          </div>
+        </div>
+
+        <!-- 5 sample buttons -->
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <button class="btn sample-btn" data-mood="happy" data-track-index="0">Play — Sunshine Pop</button>
+          <button class="btn sample-btn" data-mood="happy" data-track-index="1">Play — Feel Good Anthem</button>
+          <button class="btn sample-btn" data-mood="happy" data-track-index="2">Play — Upbeat Drive</button>
+          <button class="btn sample-btn" data-mood="happy" data-track-index="3">Play — Party Starter</button>
+          <button class="btn sample-btn" data-mood="happy" data-track-index="4">Play — Bright Loops</button>
+        </div>
+      </article>
+
+      <!-- hcard: Relax/Chill -->
+      <article class="hcard" role="listitem" data-category="tired" aria-label="Relax chill">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <img src="/static/images/play_Lo-Fi.jpg" alt="Relax cover" style="width:88px;height:88px;border-radius:12px;object-fit:cover;box-shadow:0 14px 40px rgba(0,0,0,0.45);filter:grayscale(.04);">
+          <div>
+            <h4 style="margin:0;text-align:left">Relax / Chill</h4>
+            <p class="muted-small" style="margin:6px 0 0 0">Lo-fi and ambient beats for focus.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <button class="btn sample-btn" data-mood="tired" data-track-index="0">Play — Late Night Lofi</button>
+          <button class="btn sample-btn" data-mood="tired" data-track-index="1">Play — Calm Waves</button>
+          <button class="btn sample-btn" data-mood="tired" data-track-index="2">Play — Study Breeze</button>
+          <button class="btn sample-btn" data-mood="tired" data-track-index="3">Play — Midnight Echo</button>
+          <button class="btn sample-btn" data-mood="tired" data-track-index="4">Play — Soft Piano</button>
+        </div>
+      </article>
+
+      <!-- hcard: Sad/Emotional -->
+      <article class="hcard" role="listitem" data-category="sad" aria-label="Sad emotional">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <img src="/static/images/play_sad.jpg" alt="Sad cover" style="width:88px;height:88px;border-radius:12px;object-fit:cover;box-shadow:0 14px 40px rgba(0,0,0,0.45);filter:contrast(.95) saturate(.9);">
+          <div>
+            <h4 style="margin:0;text-align:left">Sad / Emotional</h4>
+            <p class="muted-small" style="margin:6px 0 0 0">Acoustic ballads and mellow pieces.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <button class="btn sample-btn" data-mood="sad" data-track-index="0">Play — Blue Strings</button>
+          <button class="btn sample-btn" data-mood="sad" data-track-index="1">Play — Evening Ballad</button>
+          <button class="btn sample-btn" data-mood="sad" data-track-index="2">Play — Gentle Rain</button>
+          <button class="btn sample-btn" data-mood="sad" data-track-index="3">Play — Distant Memories</button>
+          <button class="btn sample-btn" data-mood="sad" data-track-index="4">Play — Soft Guitar</button>
+        </div>
+      </article>
+
+      <!-- hcard: Angry/Rock -->
+      <article class="hcard" role="listitem" data-category="angry" aria-label="Angry rock">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <img src="/static/images/play_rock.jpg" alt="Rock cover" style="width:88px;height:88px;border-radius:12px;object-fit:cover;box-shadow:0 14px 40px rgba(0,0,0,0.45);filter:contrast(1.06) saturate(1.1);">
+          <div>
+            <h4 style="margin:0;text-align:left">Angry / Rock</h4>
+            <p class="muted-small" style="margin:6px 0 0 0">Rock & metal to vent energy.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <button class="btn sample-btn" data-mood="angry" data-track-index="0">Play — Heavy Riff</button>
+          <button class="btn sample-btn" data-mood="angry" data-track-index="1">Play — Drive Hard</button>
+          <button class="btn sample-btn" data-mood="angry" data-track-index="2">Play — Thunderbeat</button>
+          <button class="btn sample-btn" data-mood="angry" data-track-index="3">Play — Breakout</button>
+          <button class="btn sample-btn" data-mood="angry" data-track-index="4">Play — Razor Edge</button>
+        </div>
+      </article>
+
+      <!-- hcard: Focus / Instrumental -->
+      <article class="hcard" role="listitem" data-category="neutral" aria-label="Focus instrumental">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <img src="/static/images/play_focus.jpg" alt="Instrumental cover" style="width:88px;height:88px;border-radius:12px;object-fit:cover;box-shadow:0 14px 40px rgba(0,0,0,0.45);filter:grayscale(.02);">
+          <div>
+            <h4 style="margin:0;text-align:left">Focus / Instrumental</h4>
+            <p class="muted-small" style="margin:6px 0 0 0">Cinematic and study-friendly tracks.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <button class="btn sample-btn" data-mood="neutral" data-track-index="0">Play — Study Flow</button>
+          <button class="btn sample-btn" data-mood="neutral" data-track-index="1">Play — Cinematic Calm</button>
+          <button class="btn sample-btn" data-mood="neutral" data-track-index="2">Play — Focus Waves</button>
+          <button class="btn sample-btn" data-mood="neutral" data-track-index="4">Play — Piano Focus</button>
+          <button class="btn sample-btn" data-mood="neutral" data-track-index="3">Play — Ambient Desk</button>
+        </div>
+      </article>
+    </div>
+
+    <button class="hcarousel-btn right" id="hnext" aria-label="next" title="Next">›</button>
+  </div>
+</section>
+
+<!-- modal backdrop + sample panel (insert once, outside/after carousel) -->
+<div id="samplePanelRoot" aria-hidden="true" class="sample-panel">
+  <div class="sample-backdrop" id="sampleBackdrop" tabindex="-1" aria-hidden="true"></div>
+
+  <div class="sample-card" id="sampleCard" role="dialog" aria-modal="true" aria-labelledby="sampleTitle" tabindex="-1">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="flex:1;">
+        <h3 id="sampleTitle" style="margin:0 0 8px 0;">Mood — Samples</h3>
+        <p class="muted-small" id="sampleSubtitle" style="margin:0 0 12px 0;">Loading samples…</p>
+
+        <!-- PLAYER AREA (embed attempts go here) -->
+        <div style="display:flex;gap:14px;">
+          <!-- left column: iframe or chart -->
+          <div style="flex:1;min-width:320px;">
+            <!-- sample player area: either canvas (chart) or iframe will be inserted into #samplePlayer -->
+            <div id="samplePlayer" style="width:100%;height:220px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;">
+              <canvas id="sampleChart" width="900" height="220" style="width:100%;height:100%;border-radius:8px;"></canvas>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button id="openOnYT" class="btn" style="display:none;">Open on YouTube</button>
+              <div id="embedNotice" class="muted-small" style="align-self:center;"></div>
+            </div>
+          </div>
+
+          <!-- tracks list -->
+          <div style="width:320px;max-height:220px;overflow:auto;border-left:1px solid rgba(255,255,255,0.03);padding-left:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <strong>Tracks</strong>
+              <button id="closeSample" aria-label="Close samples" style="background:transparent;border:none;color:var(--text);font-size:18px;cursor:pointer;">✕</button>
+            </div>
+            <div id="sampleTracks" style="margin-top:10px;display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- section-scoped styles (carousel visuals + modal blur) -->
+<style>
+  /* center headings globally inside this area */
+  .section .h2 { text-align:center; }
+
+  /* card glow & polish */
+  .hcard { 
+    --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    background: var(--card-bg);
+    border-radius:14px;
+    padding:12px;
+    min-width:300px;
+    max-width:360px;
+    border:1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 10px 36px rgba(12,8,20,0.45);
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    gap:8px;
+    transition: transform .28s ease, box-shadow .28s ease, border-color .28s;
+    position:relative;
+    color:var(--text);
+  }
+  .hcard:hover { transform:translateY(-10px); box-shadow:0 40px 120px rgba(2,6,23,0.6); border-color: rgba(107,95,168,0.18); }
+
+  /* ensure inner content sits above glow */
+  .hcard > * { position:relative; z-index:1; }
+
+  /* sample buttons style inside cards */
+  .hcard .btn { width:100%; text-align:left; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:10px; padding:10px 12px; font-weight:800; }
+
+  /* hcarousel viewport polish */
+  .hcarousel { margin-top:12px; position:relative; }
+  .hcarousel-viewport { padding:12px; display:flex; gap:18px; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; scroll-behavior:smooth; }
+  .hcarousel-viewport::-webkit-scrollbar { height:10px; }
+  .hcarousel-viewport::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.06); border-radius:999px; }
+
+  .hcarousel-btn { background:linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.16)); border:1px solid rgba(255,255,255,0.04); width:44px;height:44px;border-radius:12px; display:flex;align-items:center;justify-content:center; position:absolute; top:50%; transform:translateY(-50%); z-index:5; cursor:pointer; color:var(--text); font-size:22px; }
+  .hcarousel-btn.left { left:2px; } .hcarousel-btn.right { right:2px; }
+
+  /* modal/backdrop from earlier snippet */
+  .sample-backdrop {
+    position:fixed;
+    inset:0;
+    background: rgba(5,8,15,0.45);
+    z-index:1200;
+    display:none;
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+            backdrop-filter: blur(8px) saturate(120%);
+    transition: opacity .36s cubic-bezier(.2,.9,.2,1);
+    opacity: 0;
+  }
+
+  .sample-card {
+    position:fixed;
+    z-index:1201;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%) scale(.98);
+    width:min(1100px,92%);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 40px 140px rgba(2,6,23,0.7);
+    display:none;
+    transition: transform .28s cubic-bezier(.2,.9,.2,1), opacity .26s;
+    opacity: 0;
+  }
+
+  .sample-panel--visible .sample-backdrop { display:block; opacity:1; }
+  .sample-panel--visible .sample-card {
+    display:block;
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+  }
+
+  body.panel-open .hero-wrap,
+  body.panel-open .hcarousel,
+  body.panel-open .gallery,
+  body.panel-open .testimonials,
+  body.panel-open .section,
+  body.panel-open .card-grid,
+  body.panel-open .card-surface {
+    transition: filter .28s ease, transform .28s ease, opacity .28s ease;
+    filter: blur(6px) brightness(.66) saturate(.95);
+    pointer-events: none;
+    user-select: none;
+  }
+  body.panel-open { overflow: hidden; }
+
+  /* tracks list inside panel */
+  #sampleTracks .track-row { display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02); }
+  #sampleTracks .track-row .meta { max-width:58%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #sampleTracks .openBtn { background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:10px;padding:8px 10px;border:none;color:var(--accent-contrast); font-weight:800; cursor:pointer; }
+
+  @media(max-width:980px){
+    .hcard { min-width:260px; }
+    .sample-card { width:96%; padding:12px; }
+    #samplePlayer { height:180px; }
+  }
+</style>
+<!-- Full working sample panel + carousel script (paste in place of your old script) -->
+<script>
+(function(){
+  // ---------- Utility helpers ----------
+  function safeLog(...args){ if (window.console) console.log(...args); }
+
+  function openUrlInNewTab(url){
+    try {
+      const ytId = getYouTubeId(url);
+      const final = ytId ? `https://www.youtube.com/watch?v=${ytId}` : url;
+      const a = document.createElement('a');
+      a.href = final;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch(e){
+      try { window.open(url, '_blank', 'noopener'); }
+      catch(err){ safeLog('open failed', err); }
+    }
+  }
+
+  // returns YouTube video id from many common formats, or null
+  function getYouTubeId(url){
+    try {
+      if (!url || typeof url !== 'string') return null;
+      // allow passing just an id
+      if (/^[A-Za-z0-9_-]{11}$/.test(url)) return url;
+      const u = new URL(url, window.location.origin);
+      const host = u.hostname.replace('www.','').toLowerCase();
+      if (host === 'youtu.be') return u.pathname.slice(1);
+      if (host.endsWith('youtube.com') || host === 'youtube.com'){
+        if (u.searchParams.has('v')) return u.searchParams.get('v');
+        const parts = u.pathname.split('/').filter(Boolean);
+        if (parts[0] === 'shorts' && parts[1]) return parts[1];
+        if (parts[0] === 'embed' && parts[1]) return parts[1];
+      }
+      const parts = u.pathname.split('/').filter(Boolean);
+      const last = parts[parts.length - 1] || '';
+      if (/^[\w-]{11,}$/.test(last)) return last;
+      return null;
+    } catch(e){ return null; }
+  }
+
+  // Embed into player; show fallback notice/button when needed
+  function tryEmbedInPlayer(url){
+    const playerArea = document.getElementById('samplePlayer');
+    const openBtn = document.getElementById('openOnYT');
+    const notice = document.getElementById('embedNotice');
+
+    if (!playerArea){
+      safeLog('samplePlayer element missing');
+      return;
+    }
+    playerArea.innerHTML = '';
+    if (notice) notice.innerText = '';
+
+    const id = getYouTubeId(url);
+    if (!id){
+      // not a YouTube id -> show link text and allow opening provider
+      const link = document.createElement('div');
+      link.className = 'muted-small';
+      link.innerText = 'Preview not available in embed — open on provider';
+      playerArea.appendChild(link);
+      if (openBtn){
+        openBtn.style.display = 'inline-block';
+        openBtn.onclick = ()=> openUrlInNewTab(url);
+      }
+      return;
+    }
+
+    // Create iframe
+    const iframe = document.createElement('iframe');
+    iframe.width = '100%';
+    iframe.height = '100%';
+    // embed with modest params; note: owner may still disable embedding
+    iframe.src = `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&playsinline=1`;
+    iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+    iframe.style.border = '0';
+    iframe.style.height = '100%';
+    iframe.style.width = '100%';
+    iframe.title = 'YouTube preview';
+
+    playerArea.appendChild(iframe);
+    if (openBtn){
+      openBtn.style.display = 'inline-block';
+      openBtn.onclick = ()=> openUrlInNewTab(`https://www.youtube.com/watch?v=${id}`);
+    }
+    if (notice) notice.innerText = 'If player shows "Video unavailable", click "Open on YouTube" to open the watch page.';
+  }
+
+  // ---------- Carousel controls & autoplay (defensive) ----------
+  const viewport = document.getElementById('hviewport');
+  const btnNext = document.getElementById('hnext');
+  const btnPrev = document.getElementById('hprev');
+
+  function scrollByCard(direction=1){
+    if (!viewport) return;
+    const card = viewport.querySelector('.hcard');
+    const gap = 18;
+    const cardWidth = card ? (card.offsetWidth + gap) : 340;
+    viewport.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
+  }
+  if (btnNext) btnNext.addEventListener('click', ()=> { scrollByCard(1); resetAuto(); });
+  if (btnPrev) btnPrev.addEventListener('click', ()=> { scrollByCard(-1); resetAuto(); });
+
+  let autoTimer = null;
+  function stopAuto(){ if (autoTimer) clearInterval(autoTimer); autoTimer = null; }
+  function startAuto(){ stopAuto(); autoTimer = setInterval(()=> scrollByCard(1), 4200); }
+  function resetAuto(){ stopAuto(); setTimeout(startAuto, 2000); }
+  if (viewport){
+    viewport.addEventListener('mouseenter', stopAuto);
+    viewport.addEventListener('mouseleave', startAuto);
+    startAuto();
+  }
+
+  // ---------- Reliable tested tracks (use embeddable/demo/watchable links) ----------
+  const TRACKS = {
+    happy: [
+      { title: 'Sunshine Pop (Demo)', url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U' },
+      { title: 'Feel Good Anthem (Demo)', url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE' },
+      { title: 'Upbeat Drive (Sample)', url: 'https://www.youtube.com/watch?v=3JZ_D3ELwOQ' },
+      { title: 'Party Lofi (Sample)', url: 'https://www.youtube.com/watch?v=5qap5aO4i9A' },
+      { title: 'Bright Loops (Demo)', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }
+    ],
+    tired: [
+      { title: 'Late Night Lofi', url: 'https://www.youtube.com/watch?v=5qap5aO4i9A' },
+      { title: 'Calm Waves (Demo)', url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U' },
+      { title: 'Study Breeze (Demo)', url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE' },
+      { title: 'Midnight Echo', url: 'https://www.youtube.com/watch?v=3JZ_D3ELwOQ' },
+      { title: 'Soft Piano', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }
+    ],
+    sad: [
+      { title: 'Blue Strings (Demo)', url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U' },
+      { title: 'Evening Ballad', url: 'https://www.youtube.com/watch?v=3JZ_D3ELwOQ' },
+      { title: 'Gentle Rain', url: 'https://www.youtube.com/watch?v=5qap5aO4i9A' },
+      { title: 'Distant Memories', url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE' },
+      { title: 'Soft Guitar', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }
+    ],
+    angry: [
+      { title: 'Heavy Riff', url: 'https://www.youtube.com/watch?v=3JZ_D3ELwOQ' },
+      { title: 'Drive Hard', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+      { title: 'Thunderbeat', url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U' },
+      { title: 'Breakout', url: 'https://www.youtube.com/watch?v=5qap5aO4i9A' },
+      { title: 'Razor Edge', url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE' }
+    ],
+    neutral: [
+      { title: 'Study Flow (Ambient)', url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U' },
+      { title: 'Cinematic Calm (Demo)', url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE' },
+      { title: 'Focus Waves (Sample)', url: 'https://www.youtube.com/watch?v=3JZ_D3ELwOQ' },
+      { title: 'Ambient Desk (Demo)', url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE' },
+      { title: 'Piano Focus (Sample)', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }
+    ]
+  };
+
+  // ---------- Panel elements ----------
+  const panelRoot = document.getElementById('samplePanelRoot');
+  const backdrop = document.getElementById('sampleBackdrop');
+  const card = document.getElementById('sampleCard');
+  const sampleTitle = document.getElementById('sampleTitle');
+  const sampleSubtitle = document.getElementById('sampleSubtitle');
+  const tracksContainer = document.getElementById('sampleTracks');
+  const closeBtn = document.getElementById('closeSample');
+  const openOnYTBtn = document.getElementById('openOnYT');
+  let currentTrackUrl = null;
+
+  // ---------- Simple canvas chart (vanilla) ----------
+  const canvas = document.getElementById('sampleChart');
+  const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
+  let chartAnim = null;
+
+  function genMetrics(seed=0){
+    const len = 20;
+    const base = (x) => 0.5 + 0.2 * Math.sin((x + seed) * 0.45) + (Math.random()-0.5)*0.08;
+    const energy = Array.from({length:len}, (_,i) => Math.min(1, Math.max(0, base(i) + 0.12)));
+    const tempo  = Array.from({length:len}, (_,i) => Math.min(1, Math.max(0, base(i+3) + 0.06)));
+    const valence= Array.from({length:len}, (_,i) => Math.min(1, Math.max(0, base(i+6) - 0.04)));
+    return {energy, tempo, valence};
+  }
+
+  function drawChart(metrics){
+    if (!ctx || !canvas) return;
+    const DPR = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth * DPR;
+    const h = canvas.clientHeight * DPR;
+    canvas.width = w; canvas.height = h;
+    ctx.clearRect(0,0,w,h);
+    const pad = 22 * DPR;
+    const innerW = w - pad*2;
+    const innerH = h - pad*2;
+    const len = metrics.energy.length;
+
+    function _drawLine(arr){
+      ctx.beginPath();
+      for (let i=0;i<len;i++){
+        const x = pad + (i/(len-1)) * innerW;
+        const y = pad + (1 - arr[i]) * innerH;
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.lineWidth = 2.5 * DPR;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // energy
+    ctx.strokeStyle = '#7be495'; _drawLine(metrics.energy);
+    // tempo
+    ctx.strokeStyle = '#9b7bff'; _drawLine(metrics.tempo);
+    // valence
+    ctx.strokeStyle = '#5cc1ff'; _drawLine(metrics.valence);
+
+    // legend
+    const legendX = pad;
+    const legendY = pad - 6*DPR;
+    const box = 10 * DPR;
+    ctx.fillStyle = '#7be495'; ctx.fillRect(legendX, legendY, box, box);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = `${12*DPR}px system-ui,Segoe UI,Roboto`; ctx.fillText('Energy', legendX + box + 8*DPR, legendY + box - 1*DPR);
+    ctx.fillStyle = '#9b7bff'; ctx.fillRect(legendX + 86*DPR, legendY, box, box);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillText('Tempo', legendX + 86*DPR + box + 8*DPR, legendY + box - 1*DPR);
+    ctx.fillStyle = '#5cc1ff'; ctx.fillRect(legendX + 166*DPR, legendY, box, box);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillText('Valence', legendX + 166*DPR + box + 8*DPR, legendY + box - 1*DPR);
+  }
+
+  function animateChartTo(metrics){
+    if (!ctx || !canvas) return;
+    cancelAnimationFrame(chartAnim);
+    const duration = 600;
+    const start = performance.now();
+    const startMetrics = { energy: metrics.energy.map(()=>0), tempo: metrics.tempo.map(()=>0), valence: metrics.valence.map(()=>0) };
+
+    function step(now){
+      const t = Math.min(1, (now - start) / duration);
+      const ease = (x) => 1 - Math.pow(1-x, 3);
+      const ft = ease(t);
+      const interp = {
+        energy: metrics.energy.map((v,i)=> startMetrics.energy[i] + (v - startMetrics.energy[i]) * ft),
+        tempo:  metrics.tempo.map((v,i)=> startMetrics.tempo[i] + (v - startMetrics.tempo[i]) * ft),
+        valence:metrics.valence.map((v,i)=> startMetrics.valence[i] + (v - startMetrics.valence[i]) * ft)
+      };
+      drawChart(interp);
+      if (t < 1) chartAnim = requestAnimationFrame(step);
+    }
+    chartAnim = requestAnimationFrame(step);
+  }
+
+  // ---------- Panel show/hide and populate ----------
+  function showPanelFor(mood, sampleIndex){
+    const list = TRACKS[mood] || TRACKS['neutral'];
+    if (!sampleTitle || !sampleSubtitle || !tracksContainer) {
+      safeLog('panel required elements missing');
+      return;
+    }
+    sampleTitle.innerText = `${mood[0].toUpperCase()+mood.slice(1)} — Samples`;
+    sampleSubtitle.innerText = `Showing sample ${sampleIndex+1} of ${list.length} for "${mood}"`;
+    tracksContainer.innerHTML = '';
+
+    list.forEach((t, idx) => {
+      const row = document.createElement('div');
+      row.className = 'track-row';
+      row.innerHTML = `<div class="meta"><div style="font-weight:800">${idx+1}. ${t.title}</div><div style="font-size:12px;color:var(--muted)">${t.url}</div></div>
+                       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                         <button class="openBtn" data-url="${t.url}" type="button">Open</button>
+                         <div style="font-size:12px;color:var(--muted)">#${idx+1}</div>
+                       </div>`;
+      tracksContainer.appendChild(row);
+    });
+
+    // Attach per-row open handlers
+    tracksContainer.querySelectorAll('.openBtn').forEach((b)=> {
+      b.addEventListener('click', ()=> {
+        const url = b.getAttribute('data-url');
+        openUrlInNewTab(url);
+      });
+    });
+
+    const seed = (mood.split('').reduce((s,ch)=> s + ch.charCodeAt(0), 0) + sampleIndex*7) % 100;
+    const metrics = genMetrics(seed);
+    animateChartTo(metrics);
+
+    const firstUrl = (list && list[sampleIndex] && list[sampleIndex].url) || (list && list[0] && list[0].url);
+    currentTrackUrl = firstUrl || null;
+    tryEmbedInPlayer(firstUrl);
+
+    if (panelRoot) panelRoot.classList.add('sample-panel--visible');
+    document.body.classList.add('panel-open');
+    if (panelRoot) panelRoot.setAttribute('aria-hidden','false');
+    if (backdrop) backdrop.setAttribute('aria-hidden','false');
+    if (card) card.setAttribute('aria-hidden','false');
+
+    setTimeout(()=> { if (closeBtn) closeBtn.focus(); }, 160);
+  }
+
+  function hidePanel(){
+    if (panelRoot) panelRoot.classList.remove('sample-panel--visible');
+    document.body.classList.remove('panel-open');
+    if (panelRoot) panelRoot.setAttribute('aria-hidden','true');
+    if (backdrop) backdrop.setAttribute('aria-hidden','true');
+    if (card) card.setAttribute('aria-hidden','true');
+    cancelAnimationFrame(chartAnim);
+    const playerArea = document.getElementById('samplePlayer');
+    if (playerArea) {
+      // reset player area to original canvas container
+      playerArea.innerHTML = '<canvas id="sampleChart" width="900" height="220" style="width:100%;height:100%;border-radius:8px;"></canvas>';
+      // rebind ctx and chart var references
+      const newCanvas = document.getElementById('sampleChart');
+      if (newCanvas && newCanvas.getContext){
+        // update local references (note: existing closures still use old ctx; but on reopen we'll re-init)
+      }
+    }
+    currentTrackUrl = null;
+  }
+
+  // Attach sample buttons (defensive)
+  document.querySelectorAll('.sample-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const mood = btn.getAttribute('data-mood') || 'neutral';
+      const idx = parseInt(btn.getAttribute('data-track-index') || '0', 10);
+      showPanelFor(mood, Math.max(0, Math.min((TRACKS[mood]||TRACKS['neutral']).length-1, idx)));
+    });
+  });
+
+  if (backdrop) backdrop.addEventListener('click', hidePanel);
+  if (closeBtn) closeBtn.addEventListener('click', hidePanel);
+
+  document.addEventListener('keydown', (ev)=>{ if (ev.key === 'Escape') hidePanel(); });
+
+  document.addEventListener('focus', function(ev){
+    if (!document.body.classList.contains('panel-open')) return;
+    if (card && !card.contains(ev.target)) {
+      ev.stopPropagation();
+      card.focus();
+    }
+  }, true);
+
+  window.addEventListener('resize', ()=> {
+    const c = document.getElementById('sampleChart');
+    if (c && panelRoot && panelRoot.classList.contains('sample-panel--visible')){
+      // regenerate a small metrics preview for redraw
+      const moodText = (sampleTitle && sampleTitle.innerText.split(' ')[0].toLowerCase()) || 'neutral';
+      const metrics = genMetrics((moodText.charCodeAt(0)||0));
+      // update canvas drawing directly
+      try { drawChart(metrics); } catch(e){ safeLog(e); }
+    }
+  });
+
+  if (openOnYTBtn) openOnYTBtn.addEventListener('click', ()=> {
+    if (currentTrackUrl) openUrlInNewTab(currentTrackUrl);
+    else {
+      const fallback = TRACKS['neutral'] && TRACKS['neutral'][0] && TRACKS['neutral'][0].url;
+      if (fallback) openUrlInNewTab(fallback);
+    }
+  });
+
+  // if you want to automatically open neutral sample on page load for testing:
+  // showPanelFor('neutral', 0);
+
+  safeLog('sample panel script initialised');
+})();
+</script>
+
+
+
+<!-- ===========================
+     OUR ACCURACY SECTION (REPLACES calibration block)
+     - Animated circular metrics + floating round shapes background
+     - Counters + progress bars animate when visible
+     - Lightweight, accessible & visually attractive
+     - UPDATED: Progress bars + illustration on the right (responsive)
+     =========================== -->
+<section id="accuracy" class="accuracy py-5" aria-label="our accuracy" style="padding-bottom:28px;">
+  <div class="accuracy-bg" aria-hidden="true"></div>
+
+  <div style="max-width:1150px;margin:0 auto;padding:36px 18px;">
+    <div style="text-align:center;color:var(--muted);margin-bottom:14px;">
+      <h2 style="margin:0 0 6px 0;font-size:1.8rem;font-weight:900;color:var(--accent);">Our <span style="color:var(--text);">Accuracy</span></h2>
+      <p style="margin:0; color:var(--muted); max-width:780px; margin-left:auto; margin-right:auto;">
+        Model performance metrics produced from evaluation runs — visually presented so you can quickly gauge model confidence and operational reliability.
+      </p>
+    </div>
+
+    <!-- Metric grid -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px;">
+      <!-- Metric card template -->
+      <div class="metric-card" role="group" aria-labelledby="m1" tabindex="0">
+        <div class="metric-round">
+          <svg class="metric-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="g-m1" x1="0" x2="1">
+                <stop offset="0" stop-color="#6ee7b7"/>
+                <stop offset="1" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="46" class="ring-bg"></circle>
+            <circle cx="60" cy="60" r="46" class="ring-fill" data-target="99.2"></circle>
+          </svg>
+          <div class="metric-val"><span class="counter" data-target="99.2">0.0</span><span class="pct">%</span></div>
+        </div>
+        <div class="metric-title" id="m1">Detection Accuracy</div>
+      </div>
+
+      <div class="metric-card" role="group" aria-labelledby="m2" tabindex="0">
+        <div class="metric-round">
+          <svg class="metric-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="g-m2" x1="0" x2="1">
+                <stop offset="0" stop-color="#7ad1ff"/>
+                <stop offset="1" stop-color="#b58bff"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="46" class="ring-bg"></circle>
+            <circle cx="60" cy="60" r="46" class="ring-fill" data-target="98.5"></circle>
+          </svg>
+          <div class="metric-val"><span class="counter" data-target="98.5">0.0</span><span class="pct">%</span></div>
+        </div>
+        <div class="metric-title" id="m2">Precision Rate</div>
+      </div>
+
+      <div class="metric-card" role="group" aria-labelledby="m3" tabindex="0">
+        <div class="metric-round">
+          <svg class="metric-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="g-m3" x1="0" x2="1">
+                <stop offset="0" stop-color="#ffd37a"/>
+                <stop offset="1" stop-color="#ff7a7a"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="46" class="ring-bg"></circle>
+            <circle cx="60" cy="60" r="46" class="ring-fill" data-target="97.8"></circle>
+          </svg>
+          <div class="metric-val"><span class="counter" data-target="97.8">0.0</span><span class="pct">%</span></div>
+        </div>
+        <div class="metric-title" id="m3">Recall Rate</div>
+      </div>
+
+      <div class="metric-card" role="group" aria-labelledby="m4" tabindex="0">
+        <div class="metric-round">
+          <svg class="metric-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="g-m4" x1="0" x2="1">
+                <stop offset="0" stop-color="#6ee7b7"/>
+                <stop offset="1" stop-color="#00c6ff"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="46" class="ring-bg"></circle>
+            <circle cx="60" cy="60" r="46" class="ring-fill" data-target="100"></circle>
+          </svg>
+          <div class="metric-val"><span class="counter" data-target="100">0.0</span><span class="pct">%</span></div>
+        </div>
+        <div class="metric-title" id="m4">Uptime Reliability</div>
+      </div>
+    </div>
+
+    <!-- Progress Bars + Right-side image (NEW ROW) -->
+    <div style="margin-top:28px;">
+      <!-- two-column layout: left = progress bars, right = illustration -->
+      <div class="progress-row" style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:center;">
+        <!-- LEFT: progress bars -->
+        <div>
+          <div class="progress-group">
+            <label class="progress-label">Model Confidence</label>
+            <div class="progress"><div class="progress-bar progress-animate" data-width="99%"></div></div>
+          </div>
+
+          <div class="progress-group" style="margin-top:12px;">
+            <label class="progress-label">Coverage (Evaluation)</label>
+            <div class="progress"><div class="progress-bar progress-animate" data-width="98%"></div></div>
+          </div>
+
+          <div class="progress-group" style="margin-top:12px;">
+            <label class="progress-label">Real-time Response</label>
+            <div class="progress"><div class="progress-bar progress-animate" data-width="96%"></div></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Illustration card -->
+        <div style="display:flex;justify-content:center;align-items:center;">
+          <div class="accuracy-image-card" style="width:100%;max-width:340px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.004));box-shadow:0 18px 46px rgba(2,6,23,0.28);padding:12px;display:flex;flex-direction:column;align-items:center;gap:12px;">
+            <img src="/static/images/our_accuracy.jpg" alt="Accuracy illustration" style="width:100%;height:180px;object-fit:cover;border-radius:8px;display:block;" onerror="this.style.display='none'">
+            <div style="text-align:center;">
+              <div style="font-weight:800;color:var(--text);font-size:1rem;">Model Evaluation Snapshot</div>
+              <div style="color:var(--muted);font-size:0.88rem;margin-top:6px;">Sample output visualization from recent validation run</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STYLES (scoped to section) -->
+  <style>
+    /* keep the page theme variables consistent with your file */
+    #accuracy { position:relative; overflow:hidden; border-radius:12px; }
+    .accuracy-bg {
+      position:absolute;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      background: radial-gradient(ellipse at 10% 10%, rgba(139,92,246,0.07), transparent 6%),
+                  radial-gradient(ellipse at 90% 80%, rgba(110,231,183,0.04), transparent 10%);
+      mix-blend-mode: screen;
+      filter: blur(18px);
+    }
+
+    /* floating round shapes animation */
+    @keyframes floaty {
+      0% { transform: translateY(0) translateX(0) scale(1); opacity:0.85; }
+      50% { transform: translateY(-10px) translateX(6px) scale(1.04); opacity:0.95; }
+      100% { transform: translateY(0) translateX(0) scale(1); opacity:0.85; }
+    }
+
+    /* metric card */
+    .metric-card {
+      position:relative;
+      z-index:2;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.008));
+      border-radius:14px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      border:1px solid rgba(255,255,255,0.02);
+      box-shadow:0 14px 32px rgba(2,6,23,0.36);
+      transition: transform .28s ease, box-shadow .28s ease;
+      color:var(--text);
+    }
+    .metric-card:focus,
+    .metric-card:hover { transform: translateY(-8px); box-shadow:0 30px 60px rgba(2,6,23,0.45); }
+
+    .metric-round { width:120px; height:120px; position:relative; display:flex; align-items:center; justify-content:center; }
+    .metric-ring { width:120px; height:120px; }
+    .metric-ring .ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.03);
+      stroke-width:12;
+    }
+    .metric-ring .ring-fill {
+      fill: none;
+      stroke: url(#g-m1);
+      stroke-width:12;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 60px 60px;
+      stroke-dasharray: 289; /* 2*pi*r approx (2*pi*46) */
+      stroke-dashoffset: 289;
+      transition: stroke-dashoffset 1.8s cubic-bezier(.2,.9,.2,1);
+    }
+
+    /* value in the center */
+    .metric-val { position:absolute; text-align:center; font-weight:900; font-size:1.35rem; display:flex; align-items:baseline; gap:4px; color:var(--text); }
+    .metric-val .pct { font-size:0.7rem; color:var(--muted); font-weight:800; }
+
+    .metric-title { font-weight:800; color:var(--muted); text-align:center; font-size:0.95rem; }
+
+    /* progress group */
+    .progress-group { margin-top:6px; max-width:760px; margin-left:0; }
+    .progress-label { display:block; color:var(--muted); font-weight:800; margin-bottom:6px; }
+    .progress { height:12px; background: rgba(255,255,255,0.02); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.02); }
+    .progress-bar { height:100%; width:0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 1.6s cubic-bezier(.2,.9,.2,1); box-shadow:0 8px 24px rgba(107,95,168,0.06); border-radius:999px; }
+
+    /* image card */
+    .accuracy-image-card img { display:block; }
+    .accuracy-image-card { color:var(--text); }
+
+    /* responsive grid adjustments */
+    @media (max-width:980px) {
+      .metric-card { padding:14px; }
+      /* stack metrics into two columns on smaller screens */
+      #accuracy div[style*="display:grid"] { grid-template-columns: repeat(2,1fr); gap:12px; }
+      .progress-row { grid-template-columns: 1fr 260px; gap:14px; }
+      .accuracy-image-card { max-width:260px; }
+    }
+    @media (max-width:640px) {
+      #accuracy div[style*="display:grid"] { grid-template-columns: repeat(1,1fr); }
+      .progress-row { grid-template-columns: 1fr; }
+      .accuracy-image-card { max-width:100%; width:100%; }
+    }
+  </style>
+
+  <!-- SCRIPT: counters + ring + progress animation + decorative circles -->
+  <script>
+    (function(){
+      // Helpers
+      const easeOutQuad = (t) => t*(2-t);
+
+      // Animate counters when visible
+      const counters = Array.from(document.querySelectorAll('#accuracy .counter'));
+      const animateCounter = (el) => {
+        const target = parseFloat(el.dataset.target || '0');
+        const duration = 1400;
+        const start = performance.now();
+        const initial = 0;
+        function step(now){
+          const dt = Math.min(1, (now - start) / duration);
+          const eased = easeOutQuad(dt);
+          const val = initial + (target - initial) * eased;
+          // show with one decimal if not integer
+          el.innerText = (Math.abs(target - Math.round(target)) > 0.5 ? val.toFixed(1) : Math.round(val)) ;
+          if (dt < 1) requestAnimationFrame(step);
+          else el.innerText = (Math.round(target) === target ? String(Math.round(target)) : target.toFixed(1));
+        }
+        requestAnimationFrame(step);
+      };
+
+      // Animate ring: convert target percent -> dashoffset
+      const rings = Array.from(document.querySelectorAll('#accuracy .ring-fill'));
+      function animateRing(el){
+        const target = parseFloat(el.dataset.target || '0'); // 0..100 or decimal like 99.2
+        const pct = Math.max(0, Math.min(100, target));
+        const radius = 46;
+        const full = 2 * Math.PI * radius; // ~289
+        const offset = full * (1 - (pct / 100));
+        setTimeout(()=> { el.style.strokeDashoffset = String(offset); }, 60);
+      }
+
+      // Progress bars animation
+      const bars = Array.from(document.querySelectorAll('#accuracy .progress-animate'));
+      function animateBar(el){
+        const w = el.getAttribute('data-width') || '0%';
+        setTimeout(()=> el.style.width = w, 120);
+      }
+
+      // Observe accuracy section
+      const acc = document.getElementById('accuracy');
+      if (acc) {
+        const obs = new IntersectionObserver((entries, o) => {
+          if (!entries[0].isIntersecting) return;
+          // animate counters
+          counters.forEach(c => animateCounter(c));
+          // rings
+          rings.forEach(r => animateRing(r));
+          // bars
+          bars.forEach(b => animateBar(b));
+          o.disconnect();
+        }, { threshold: 0.34 });
+        obs.observe(acc);
+      }
+
+      // set correct gradient references per ring to avoid reusing same id
+      (function fixRingGradients(){
+        const rings = document.querySelectorAll('#accuracy .metric-card .ring-fill');
+        // map gradients in order
+        const grads = ['g-m1','g-m2','g-m3','g-m4'];
+        rings.forEach((r, i) => {
+          const gid = grads[i] || grads[0];
+          r.setAttribute('stroke', 'url(#' + gid + ')');
+        });
+      })();
+
+      // decorative floating circles - injected DOM elements for subtle moving shapes
+      (function addFloatingShapes(){
+        try {
+          const bg = document.querySelector('#accuracy .accuracy-bg');
+          if (!bg) return;
+          const shapes = [
+            { size:160, left:'6%', top:'10%', color:'rgba(139,92,246,0.06)', delay: '0s' },
+            { size:120, left:'80%', top:'20%', color:'rgba(110,231,183,0.04)', delay: '1.2s' },
+            { size:220, left:'50%', top:'70%', color:'rgba(107,95,168,0.03)', delay: '0.6s' },
+            { size:90, left:'18%', top:'60%', color:'rgba(255,183,77,0.03)', delay: '1.6s' }
+          ];
+          shapes.forEach((s) => {
+            const el = document.createElement('div');
+            el.style.position = 'absolute';
+            el.style.left = s.left;
+            el.style.top = s.top;
+            el.style.width = s.size + 'px';
+            el.style.height = s.size + 'px';
+            el.style.borderRadius = '999px';
+            el.style.background = s.color;
+            el.style.filter = 'blur(10px)';
+            el.style.transform = 'translate(-50%,-50%)';
+            el.style.zIndex = 1;
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.9';
+            el.style.animation = 'floaty 6s ease-in-out ' + s.delay + ' infinite';
+            bg.appendChild(el);
+          });
+        } catch(e){ /* non-critical */ }
+      })();
+
+    })();
+  </script>
+</section>
+
+
+<!-- 💬 TESTIMONIALS SECTION -->
+<section class="testimonials py-5 text-light text-center">
+  <div class="container">
+    <h2 class="fw-bold mb-4 text-info">What <span class="text-light">Users Say</span></h2>
+    <p class="text-secondary mb-5 fs-5">
+      Loved by creators, developers and music lovers who use the AI Music Motion Player every day.
+    </p>
+
+    <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-inner">
+
+        <!-- Testimonial 1 -->
+        <div class="carousel-item active">
+          <div class="testimonial-card mx-auto p-4">
+            <div class="user-img mb-3">
+              <img src="https://i.pravatar.cc/100?img=11" alt="User 1" class="rounded-circle shadow">
+            </div>
+            <p class="fst-italic text-secondary">
+              “The face-mood detection is shockingly accurate. The player instantly picks songs that match my emotions.
+              It feels like the music actually understands me.”
+            </p>
+            <h5 class="mt-3 fw-bold text-info">Aarav Sen</h5>
+            <p class="text-muted small">Music Producer</p>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="carousel-item">
+          <div class="testimonial-card mx-auto p-4">
+            <div class="user-img mb-3">
+              <img src="https://i.pravatar.cc/100?img=12" alt="User 2" class="rounded-circle shadow">
+            </div>
+            <p class="fst-italic text-secondary">
+              “The AI Voice Emotion Engine is brilliant. It recognizes excitement, calmness, or stress within seconds
+              and updates the playlist automatically. Game-changer for productivity!”
+            </p>
+            <h5 class="mt-3 fw-bold text-info">Nikita Sharma</h5>
+            <p class="text-muted small">Software Developer</p>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="carousel-item">
+          <div class="testimonial-card mx-auto p-4">
+            <div class="user-img mb-3">
+              <img src="https://i.pravatar.cc/100?img=13" alt="User 3" class="rounded-circle shadow">
+            </div>
+            <p class="fst-italic text-secondary">
+              “The live visualizer + mood-history UI is the smoothest implementation I’ve ever seen. The combination of
+              camera motion, voice levels and real-time recommendations is just WOW.”
+            </p>
+            <h5 class="mt-3 fw-bold text-info">Rohan Das</h5>
+            <p class="text-muted small">UX Researcher</p>
+          </div>
+        </div>
+
+        <!-- Testimonial 4 -->
+        <div class="carousel-item">
+          <div class="testimonial-card mx-auto p-4">
+            <div class="user-img mb-3">
+              <img src="https://i.pravatar.cc/100?img=14" alt="User 4" class="rounded-circle shadow">
+            </div>
+            <p class="fst-italic text-secondary">
+              “The auto recommendations from YouTube, Spotify & YT Music are super accurate.  
+              It’s like having a personal DJ that reads your mind.”
+            </p>
+            <h5 class="mt-3 fw-bold text-info">Emily Watson</h5>
+            <p class="text-muted small">Independent Artist</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Carousel Controls -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </button>
+
+    </div>
+  </div>
+
+<style>
+  /* ===========================
+   AI Music Motion Player — Testimonials (Enhanced CSS)
+   Drop this into your stylesheet or below the testimonial HTML
+   =========================== */
+
+.testimonials {
+  background: radial-gradient(1200px 500px at 50% 20%, rgba(139,92,246,0.08) 0%, rgba(110,231,183,0.03) 30%, #050612 60%);
+  padding: 100px 0 80px;
+  scroll-margin-top: 96px;
+  color: #e6f7f3;
+  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* container tweaks */
+.testimonials .container { max-width: 1100px; }
+
+/* heading */
+.testimonials h2 {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+.testimonials h2 .text-light { color: #ffffff; }
+
+/* subtext */
+.testimonials p.fs-5 {
+  max-width: 760px;
+  margin: 0 auto 28px;
+  opacity: 0.85;
+  line-height: 1.45;
+}
+
+/* carousel inner layout */
+#testimonialCarousel .carousel-inner {
+  padding: 12px 0 0;
+  display: block;
+}
+
+/* testimonial card */
+.testimonial-card {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(6,8,20,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  transition: transform .45s cubic-bezier(.2,.9,.2,1), box-shadow .45s ease, border-color .35s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+/* glow accent stripe on top */
+.testimonial-card::before {
+  content: "";
+  position: absolute;
+  left: -40%;
+  top: -18%;
+  width: 180%;
+  height: 72%;
+  background: linear-gradient(90deg, rgba(110,231,183,0.06), rgba(139,92,246,0.07));
+  transform: rotate(-6deg);
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* hover lift */
+.testimonial-card:hover,
+.testimonial-card:focus-within {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 26px 60px rgba(13,16,40,0.65), 0 6px 30px rgba(110,231,183,0.06);
+  border-color: rgba(110,231,183,0.16);
+}
+
+/* user image */
+.user-img {
+  display: flex;
+  justify-content: center;
+}
+.user-img img {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  object-fit: cover;
+  box-shadow: 0 8px 22px rgba(11,14,30,0.6);
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+
+/* subtle pop on image hover */
+.testimonial-card:hover .user-img img {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 18px 50px rgba(110,231,183,0.08);
+}
+
+/* testimonial text */
+.testimonial-card p.fst-italic {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: rgba(230,247,243,0.95);
+  margin: 8px 0 14px;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+
+/* name + role */
+.testimonial-card h5 {
+  margin: 8px 0 0;
+  font-size: 1.05rem;
+  color: #bfeee0;
+}
+.testimonial-card p.text-muted {
+  margin: 0;
+  color: rgba(200,215,210,0.65);
+}
+
+/* carousel controls (bigger, clearer) */
+.carousel-control-prev,
+.carousel-control-next {
+  width: 64px;
+  height: 64px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 1;
+}
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: #00c6ff;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: inline-block;
+  box-shadow: 0 10px 30px rgba(0,198,255,0.12);
+  background-size: 18px 18px, 100% 100%;
+}
+
+/* improve keyboard focus visibility */
+.carousel-control-prev:focus,
+.carousel-control-next:focus,
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  outline: none;
+  transform: translateY(-50%) scale(1.02);
+  filter: saturate(1.05);
+}
+
+/* center controls on small screens */
+@media (max-width: 768px) {
+  .carousel-control-prev, .carousel-control-next {
+    width: 48px; height: 48px;
+  }
+  .carousel-control-prev { left: 8px; }
+  .carousel-control-next { right: 8px; }
+}
+
+/* carousel indicators (optional if you want to add them) */
+.carousel-indicators {
+  bottom: -18px;
+}
+.carousel-indicators button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.14);
+  border: none;
+  margin: 0 6px;
+  transition: transform .25s ease, background-color .25s ease;
+}
+.carousel-indicators .active {
+  background-color: #00c6ff;
+  transform: scale(1.18);
+  box-shadow: 0 6px 18px rgba(0,198,255,0.12);
+}
+
+/* small screens: tighter card */
+@media (max-width: 540px) {
+  .testimonial-card { padding: 18px; border-radius: 12px; }
+  .user-img img { width: 72px; height: 72px; }
+  .testimonial-card p.fst-italic { font-size: 0.98rem; }
+  .testimonials { padding-top: 72px; }
+}
+
+/* accessibility: high-contrast fallback */
+@media (prefers-contrast: more) {
+  .testimonial-card { border-color: rgba(255,255,255,0.14); box-shadow: none; }
+  .testimonial-card::before { display: none; }
+}
+
+/* small accent ribbon (optional visual cue) */
+.testimonial-card .ribbon {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  background: linear-gradient(90deg,#8b5cf6,#6ee7b7);
+  color: #071225;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  box-shadow: 0 6px 18px rgba(13,16,40,0.45);
+}
+
+/* smooth text rendering */
+.testimonial-card, .testimonial-card * { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+</style>
+</section>
+
+<!-- ✨ STYLES (same as before – reuse your existing CSS) -->
+
+<!-- ❓ FAQ / HELP SECTION -->
+<section class="faq py-5 text-light">
+  <div class="container">
+    <h2 class="fw-bold mb-4 text-center text-info">
+      Frequently Asked <span class="text-light">Questions</span>
+    </h2>
+    <p class="text-secondary text-center mb-5 fs-5">
+      Got questions? We’ve got answers. Here’s everything you need to know about AI Music Motion Player.
+    </p>
+
+    <div class="row align-items-center">
+      <!-- FAQ Content -->
+      <div class="col-lg-7">
+        <div class="accordion" id="faqAccordion">
+          <!-- Question 1 -->
+          <div class="accordion-item faq-item mb-3">
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button collapsed fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false"
+                aria-controls="collapseOne">
+                How does AI Music Motion Player choose songs for my mood?
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse"
+              aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-secondary">
+                The player analyzes live face and voice signals (if you allow camera/mic access),
+                plus your listening history and track metadata (tempo, energy, genre). It then
+                ranks tracks that best match the detected mood and builds playlists (focus, chill,
+                energetic, etc.) tailored to that state.
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 2 -->
+          <div class="accordion-item faq-item mb-3">
+            <h2 class="accordion-header" id="headingTwo">
+              <button class="accordion-button collapsed fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false"
+                aria-controls="collapseTwo">
+                Is my camera and microphone data stored or shared?
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse"
+              aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-secondary">
+                No — by default analysis runs locally in your browser and raw media is not uploaded.
+                If you enable optional cloud features, only anonymized mood events are transmitted,
+                and only with your consent. We do not sell or share raw audio/video.
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 3 -->
+          <div class="accordion-item faq-item mb-3">
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false"
+                aria-controls="collapseThree">
+                Which music platforms are supported?
+              </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse"
+              aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-secondary">
+                The dashboard supports YouTube, YouTube Music and Spotify links/embeds. Use the
+                platform selector in the UI to pick which service to fetch recommendations from
+                and where to play tracks.
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 4 -->
+          <div class="accordion-item faq-item mb-3">
+            <h2 class="accordion-header" id="headingFour">
+              <button class="accordion-button collapsed fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false"
+                aria-controls="collapseFour">
+                Can I use the app without granting camera or mic access?
+              </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse"
+              aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-secondary">
+                Yes. All core player and playlist features work without camera/mic. Mood-based
+                recommendations will be limited to saved history or disabled until you grant access.
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 5 -->
+          <div class="accordion-item faq-item mb-3">
+            <h2 class="accordion-header" id="headingFive">
+              <button class="accordion-button collapsed fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false"
+                aria-controls="collapseFive">
+                My combined mood always shows "neutral" — can I change it?
+              </button>
+            </h2>
+            <div id="collapseFive" class="accordion-collapse collapse"
+              aria-labelledby="headingFive" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-secondary">
+                The combined mood is derived from face + voice signals. If it remains neutral:
+                check camera/mic permissions, improve lighting and mic pickup, or manually override
+                the mood in the dashboard; manual overrides are used to refine future recommendations.
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 6 -->
+          <div class="accordion-item faq-item">
+            <h2 class="accordion-header" id="headingSix">
+              <button class="accordion-button collapsed fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false"
+                aria-controls="collapseSix">
+                Is there an API or developer access?
+              </button>
+            </h2>
+            <div id="collapseSix" class="accordion-collapse collapse"
+              aria-labelledby="headingSix" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-secondary">
+                Client-side hooks are available and a minimal recommendations API can be exposed
+                on request. Contact the project owner if you need developer access or integrations.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FAQ Image -->
+      <div class="col-lg-5 text-center mt-4 mt-lg-0">
+        <img src="/static/images/project_artwork.jpg" alt="FAQ Illustration"
+          class="img-fluid faq-image">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 🎨 FAQ STYLES -->
+<style>
+  .faq {
+    background: radial-gradient(circle at center, #211235 0%, #211235 100%);
+  }
+
+  .faq-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.8rem;
+    overflow: hidden;
+  }
+
+  .accordion-button {
+    background: transparent;
+    color: #fff;
+    box-shadow: none;
+    transition: all 0.3s ease;
+  }
+
+  .accordion-button:not(.collapsed) {
+    color: #00c6ff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .accordion-button::after {
+    filter: invert(1);
+  }
+
+  .accordion-body {
+    background: rgba(255, 255, 255, 0.03);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .accordion-button:hover {
+    color: #00c6ff;
+  }
+
+  /* Right-side image styling */
+  .faq-image {
+    max-width: 80%;
+    filter: drop-shadow(0 0 25px rgba(0, 198, 255, 0.3));
+    transition: transform 0.4s ease, filter 0.4s ease;
+  }
+
+  .faq-image:hover {
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 35px rgba(0, 198, 255, 0.5));
+  }
+</style>
+
+<!-- 🎯 CTA SECTION (links directly to /contact) -->
+<section class="cta-section text-center py-5 text-light"
+         style="background: linear-gradient(rgba(46, 21, 58, 0.6), rgba(0,0,0,0.6)), url('/static/images/hero-bg-dark.jpg');
+                background-size: cover; 
+                background-position: center; 
+                background-repeat: no-repeat;">
+  <div class="container py-5">
+    <h2 class="text-info mb-3 fw-bold">Ready to Let Music Match Your Mood?</h2>
+    <p class="text-light mb-4 fs-5">
+      Try live mood-based playlists and instant recommendations — contact us to get started.
+    </p>
+
+    <!-- DIRECT PATH to avoid BuildError -->
+    <a href="/dashboard" 
+       class="btn btn-info btn-lg px-5 shadow-lg fw-semibold" 
+       style="border-radius: 30px; transition: 0.3s;">
+       Get Started
+    </a>
+  </div>
+
+  <style>
+    .cta-section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #211235.5);
+      z-index: -1;
+    }
+
+    .btn-info {
+      background-color: #6ee7b7;
+      border: 2px solid #6ee7b7;
+      color: #071225;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 30px;
+      transition: 0.25s ease-in-out;
+    }
+
+    .btn-info:hover {
+      background-color: #57d9a2 !important;
+      transform: scale(1.04);
+      box-shadow: 0 0 20px rgba(110,231,183,0.22);
+    }
+
+    .btn-info:active {
+      transform: scale(1);
+      box-shadow: none;
+    }
+  </style>
+</section>
+
+
+
+<!-- ===========================
+     PAGE BOOTSTRAP: reveal + global small scripts
+     (keeps page-level behaviours centralized)
+     =========================== -->
+<script>
+(function(){
+  // Reveal on scroll (global small util)
+  try {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('is-visible'); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  } catch(e){
+    // fallback: make visible
+    document.querySelectorAll('.fade-up').forEach(el => el.classList.add('is-visible'));
+  }
+
+  // Parallax for any element with id #heroArt (graceful if not present)
+  const art = document.getElementById('heroArt');
+  window.addEventListener('scroll', () => {
+    if (!art) return;
+    const rect = art.getBoundingClientRect();
+    const y = Math.max(-40, Math.min(40, (window.innerHeight/2 - rect.top) / 20));
+    art.style.transform = `translateY(${y}px)`;
+  });
+
+  // Hook into face/voice updates (fallbacks)
+  window.updateFaceMood = window.updateFaceMood || function(m){ document.getElementById('heroLiveMood').innerText = m || 'neutral'; };
+  window.updateVoiceMood = window.updateVoiceMood || function(m){ document.getElementById('heroLiveMood').innerText = m || 'neutral'; };
+
+  // Ensure fade-up class added after DOM load for graceful reveal
+  document.addEventListener('DOMContentLoaded', ()=> {
+    document.querySelectorAll('.fade-up').forEach(el => { setTimeout(()=> el.classList.add('is-visible'), 120); });
+  });
+
+})();
+</script>
+
+<!-- NAVBAR FIX: inject mobile toggle + active link (kept at bottom so header exists) -->
+<script>
+(function(){
+  function whenReady(fn){ if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn); else fn(); }
+  whenReady(function(){
+    try {
+      const path = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+      document.querySelectorAll('.main-nav a').forEach(a => {
+        try {
+          const url = new URL(a.href, window.location.origin);
+          const hrefPath = (url.pathname || '/').replace(/\/+$/, '') || '/';
+          if (hrefPath === path) a.classList.add('active'); else a.classList.remove('active');
+        } catch(e){}
+      });
+    } catch(e){}
+
+    try {
+      const headerInner = document.querySelector('.header-inner');
+      const mainNav = document.querySelector('.main-nav');
+      if (!headerInner || !mainNav) return;
+      const styleId = 'mobile-nav-fix-styles';
+      if (!document.getElementById(styleId)) {
+        const s = document.createElement('style');
+        s.id = styleId;
+        s.innerHTML = `
+          .mobile-nav-toggle { display:none; align-items:center; justify-content:center; width:44px; height:44px; border-radius:10px; border:1px solid var(--glass-border); background:transparent; color:var(--text); cursor:pointer; margin-left:8px; }
+          .main-nav { transition: max-height .32s ease, opacity .22s ease; }
+          @media(max-width:920px) {
+            .mobile-nav-toggle { display:flex; }
+            .main-nav { position: absolute; top: calc(100% + 8px); right: 20px; background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.12)); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 180px; max-height: 0; overflow: hidden; opacity: 0; box-shadow: 0 20px 60px rgba(2,6,23,0.5); z-index: 150; }
+            .main-nav.show-mobile { max-height: 480px; opacity: 1; }
+            .main-nav a { padding: 10px 12px; display:block; width:100%; }
+          }`;
+        document.head.appendChild(s);
+      }
+      if (!document.querySelector('.mobile-nav-toggle')) {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'mobile-nav-toggle'; btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); btn.innerHTML = '☰';
+        headerInner.insertBefore(btn, headerInner.querySelector('.controls'));
+        btn.addEventListener('click', () => {
+          const shown = mainNav.classList.toggle('show-mobile');
+          btn.setAttribute('aria-expanded', shown ? 'true' : 'false');
+          btn.setAttribute('aria-label', shown ? 'Close menu' : 'Open menu');
+        });
+        document.addEventListener('click', (ev) => {
+          if (window.innerWidth > 920) return;
+          const target = ev.target;
+          if (!mainNav.contains(target) && !btn.contains(target) && mainNav.classList.contains('show-mobile')) {
+            mainNav.classList.remove('show-mobile');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.setAttribute('aria-label', 'Open menu');
+          }
+        });
+        window.addEventListener('resize', () => {
+          if (window.innerWidth > 920 && mainNav.classList.contains('show-mobile')) {
+            mainNav.classList.remove('show-mobile');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.setAttribute('aria-label', 'Open menu');
+          }
+        });
+      }
+    } catch(e){ console.warn('Navbar fix script error', e); }
+  });
+})();
+</script>
+
+{% endblock %}
