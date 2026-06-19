@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI Music Recommendation App
 
 This project is an AI Music Recommendation App built with Flask, designed to suggest music based on a user's mood. It integrates with both YouTube and Spotify APIs to provide a wide range of music options.
@@ -94,3 +95,6 @@ The Flask backend exposes the following endpoints:
 *   `POST /api/check_youtube`: Check if a YouTube video is embeddable.
 *   `GET /api/debug_youtube_auto`: Debug YouTube API configuration.
 *   `GET /api/debug_spotify`: Debug Spotify API configuration.
+=======
+# AI_Music_Recommendation_App
+>>>>>>> 360468fc5b3c6689353a6a640b295555fa74a144
