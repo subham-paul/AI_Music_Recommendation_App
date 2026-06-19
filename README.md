@@ -1,100 +1,242 @@
-<<<<<<< HEAD
-# AI Music Recommendation App
+# 🎵 AI Music Recommendation App
 
-This project is an AI Music Recommendation App built with Flask, designed to suggest music based on a user's mood. It integrates with both YouTube and Spotify APIs to provide a wide range of music options.
+An intelligent **AI-powered Music Recommendation Web Application** built with **Flask** that recommends songs based on user input and AI-driven analysis. The application provides a clean web interface and integrates external APIs to deliver personalized music recommendations.
 
-## Features
+---
 
-*   **Mood-Based Recommendations**: Get music suggestions tailored to your current mood (e.g., happy, sad, excited, tired, angry, stressed, neutral).
-*   **YouTube Integration**: Search for YouTube videos and receive recommendations using the YouTube Data API.
-*   **Spotify Integration**: Search for Spotify tracks and receive recommendations using the Spotify Web API.
-*   **Mood History**: Tracks and displays a history of moods submitted by the user.
-*   **API Key Management**: Securely handles API keys using environment variables (`.env` file support via `python-dotenv`).
-*   **CORS Enabled**: Allows cross-origin requests for flexible frontend integration.
+## 🚀 Features
 
-## Technologies Used
+- 🎧 AI-based music recommendations
+- 🌐 Flask-powered web application
+- 🔗 REST API integration
+- ⚡ Fast and lightweight backend
+- 🌍 Cross-Origin Resource Sharing (CORS) support
+- 🔐 Environment variable management using `.env`
+- 🎼 Audio processing support (optional)
+- 📷 Computer vision support (optional)
+- 🔄 WebSocket support for real-time communication
 
-*   **Backend**: Python, Flask
-*   **APIs**: YouTube Data API v3, Spotify Web API
-*   **Frontend**: HTML, CSS, JavaScript (served via Flask templates and static files)
-*   **Dependency Management**: `pip`, `requirements.txt`
-*   **Environment Variables**: `python-dotenv`
+---
 
-## Setup and Installation
+## 🛠️ Tech Stack
 
-To get this project up and running on your local machine, follow these steps:
+### Backend
+- Python 3.10+
+- Flask
 
-### 1. Clone the Repository
+### Libraries Used
 
-```bash
-git clone https://github.com/subham-paul/AI_Music_Recommendation_App.git
-cd AI_Music_Recommendation_App
+| Package | Version | Purpose |
+|---------|---------|---------|
+| Flask | 2.3.3 | Web Framework |
+| flask-cors | 3.0.10 | Cross-Origin Resource Sharing |
+| python-dotenv | 1.0.0 | Environment Variables |
+| requests | 2.31.0 | API Requests |
+| opencv-python *(Optional)* | 4.8.1.78 | Image Processing |
+| pydub *(Optional)* | 0.25.1 | Audio Processing |
+| websockets | 11.0.3 | Real-Time Communication |
+
+---
+
+# 📂 Project Structure
+
+```
+AI-Music-Recommendation-App/
+│
+├── app.py
+├── requirements.txt
+├── .env
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── images/
+│
+├── templates/
+│   ├── index.html
+│   └── ...
+│
+├── utils/
+│   └── ...
+│
+├── README.md
+│
+└── ...
 ```
 
-### 2. Create a Virtual Environment (Recommended)
+---
+
+# 📦 Installation
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/subham-paul/AI-Music-Recommendation-App.git
+```
+
+```bash
+cd AI-Music-Recommendation-App
+```
+
+---
+
+## 2. Create Virtual Environment
+
+### Windows
 
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 ```
 
-### 3. Install Dependencies
+```bash
+venv\Scripts\activate
+```
+
+### Linux / macOS
+
+```bash
+python3 -m venv venv
+```
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+## 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure API Keys
+---
 
-This application requires API keys for YouTube and Spotify.
+## 4. Create Environment File
 
-*   **YouTube Data API**:
-    *   Go to the [Google Cloud Console](https://console.cloud.google.com/).
-    *   Create a new project or select an existing one.
-    *   Enable the "YouTube Data API v3".
-    *   Go to "Credentials" and create an API key.
-*   **Spotify Web API**:
-    *   Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/).
-    *   Log in and create a new application.
-    *   Note down your `Client ID` and `Client Secret`.
-
-Create a `.env` file in the root directory of your project and add your API keys:
+Create a file named:
 
 ```
-YOUTUBE_API_KEY="YOUR_YOUTUBE_API_KEY"
-SPOTIFY_CLIENT_ID="YOUR_SPOTIFY_CLIENT_ID"
-SPOTIFY_CLIENT_SECRET="YOUR_SPOTIFY_CLIENT_SECRET"
+.env
 ```
 
-### 5. Run the Application
+Example:
+
+```env
+API_KEY=your_api_key_here
+SECRET_KEY=your_secret_key
+```
+
+---
+
+## 5. Run the Application
 
 ```bash
 python app.py
 ```
 
-The application will typically run on `http://127.0.0.1:5000/`.
+or
 
-## Usage
+```bash
+flask run
+```
 
-Once the server is running, open your web browser and navigate to `http://127.0.0.1:5000/`. You can interact with the application by:
+---
 
-*   Selecting a mood to get music recommendations.
-*   Using the search functionality to find specific tracks or videos on YouTube and Spotify.
-*   Viewing your mood history.
+## 🌐 Open in Browser
 
-## Endpoints
+```
+http://127.0.0.1:5000
+```
 
-The Flask backend exposes the following endpoints:
+---
 
-*   `GET /`, `/dashboard`, `/about`, `/contact`: Serve static HTML pages.
-*   `POST /api/mood`: Submit a user's mood.
-*   `GET /api/mood/history`: Retrieve the history of submitted moods.
-*   `POST /api/search_youtube`: Search YouTube for videos.
-*   `POST /api/search_spotify`: Search Spotify for tracks.
-*   `POST /api/recommend`: Get mood-based music recommendations.
-*   `POST /api/check_youtube`: Check if a YouTube video is embeddable.
-*   `GET /api/debug_youtube_auto`: Debug YouTube API configuration.
-*   `GET /api/debug_spotify`: Debug Spotify API configuration.
-=======
-# AI_Music_Recommendation_App
->>>>>>> 360468fc5b3c6689353a6a640b295555fa74a144
+# 📋 Requirements
+
+```
+Flask==2.3.3
+flask-cors==3.0.10
+python-dotenv==1.0.0
+requests==2.31.0
+opencv-python==4.8.1.78
+pydub==0.25.1
+websockets==11.0.3
+```
+
+---
+
+# 🎯 Future Improvements
+
+- Spotify API Integration
+- YouTube Music Support
+- User Authentication
+- Playlist Generation
+- AI Emotion Detection
+- Voice-Based Music Search
+- Recommendation History
+- Dark Mode
+- Mobile Responsive UI
+- Machine Learning Recommendation Model
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create your feature branch
+
+```bash
+git checkout -b feature/NewFeature
+```
+
+3. Commit your changes
+
+```bash
+git commit -m "Add New Feature"
+```
+
+4. Push to GitHub
+
+```bash
+git push origin feature/NewFeature
+```
+
+5. Open a Pull Request
+
+---
+
+# 🐞 Issues
+
+If you find any bugs or have feature requests, please open an issue in the GitHub repository.
+
+---
+
+# 📜 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+# 👨‍💻 Author
+
+**Subham Paul**
+
+- GitHub: https://github.com/subham-paul
+- LinkedIn: https://www.linkedin.com/in/subham-paul-india/
+
+---
+
+# ⭐ Support
+
+If you found this project useful:
+
+⭐ Star this repository
+
+🍴 Fork it
+
+🛠️ Contribute to improve it
+
+---
+
+> *"Music is the soundtrack of life. AI makes discovering it even better."* 🎵
